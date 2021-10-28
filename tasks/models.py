@@ -64,7 +64,7 @@ class Task(models.Model):
 
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_creator')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
-    assignee = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
+    assignee = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name=related_name)
     section = models.ForeignKey(Section, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     task = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subcategories')
     title = models.CharField(max_length=512)
@@ -92,7 +92,7 @@ class Comment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.creator.username} - {self.task.title}'
+        return f'{self.creator.username} - {self.pk}'
 
 
 class Activity(models.Model):
