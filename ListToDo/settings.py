@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     # APPS
-    'Tasks.apps.TasksConfig',
+    'tasks.apps.TasksConfig',
 ]
 
 MIDDLEWARE = [
