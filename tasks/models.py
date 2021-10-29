@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save, m2m_changed
 
 from tasks.utils import upload_file
 
@@ -14,11 +15,11 @@ class Color(models.Model):
 class Label(models.Model):
     related_name = 'labels'
 
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
     title = models.CharField(primary_key=True, max_length=256)
 
     def __str__(self):
-        return self.title
+        return f'{self.owner.username} - {self.title}'
 
 
 class Project(models.Model):
@@ -29,14 +30,15 @@ class Project(models.Model):
         ('B', 'Board'),
     ]
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
-    user = models.ManyToManyField(User, related_name=related_name)
+    user = models.ManyToManyField(User, blank=True, null=True, related_name=related_name)
     title = models.CharField(max_length=512)
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
     color = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
+    background = models.ImageField(upload_to=upload_file, blank=True, null=True)
     view = models.CharField(max_length=1, default='L', choices=VIEWS_CHOICES)
     archive = models.BooleanField(default=False)
     position = models.PositiveIntegerField(default=0)
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
@@ -62,7 +64,7 @@ class Task(models.Model):
         ('5', 'Priority 5'),
     ]
 
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_creator')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_creator')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     assignee = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name=related_name)
     section = models.ForeignKey(Section, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
@@ -78,13 +80,13 @@ class Task(models.Model):
     complete = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.creator.username} - {self.title}'
+        return f'{self.owner.username} - {self.title}'
 
 
 class Comment(models.Model):
     related_name = 'comments'
 
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     description = models.TextField(null=True, blank=True)
@@ -92,16 +94,25 @@ class Comment(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.creator.username} - {self.pk}'
+        return f'{self.owner.username} - {self.pk}'
 
 
 class Activity(models.Model):
     related_name = 'activity'
 
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.creator.username} - {self.pk}'
+        return f'{self.owner.username} - {self.pk}'
+
+
+# def ProjectUserM2MChanged(sender, instance, *args, **kwargs):
+#     if 'post' in kwargs['action']:
+#         if instance.owner not in instance.user.all():
+#             instance.user.add(instance.owner)
+#
+#
+# m2m_changed.connect(ProjectUserM2MChanged, Project.user.through)

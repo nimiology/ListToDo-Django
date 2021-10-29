@@ -15,12 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.conf.urls.static import static
-from django.urls import path
+from django.urls import path, include
 
 from ListToDo import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('task/', include('tasks.urls')),
+    path('', include('users.urls')),
 ]
 if settings.DEBUG:
     # add media static files

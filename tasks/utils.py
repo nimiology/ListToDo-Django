@@ -2,6 +2,8 @@ import os
 import random
 import string
 
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView
+
 
 def get_filename_ext(filepath):
     base_name = os.path.basename(filepath)
@@ -15,3 +17,7 @@ def upload_file(instance, filename):
     letters = list(letters_str)
     final_name = f"{''.join(random.choice(letters) for _ in range(40))}{ext}"
     return f"{instance.creator.username}/{final_name}"
+
+
+class CreateRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView, CreateAPIView):
+    pass
