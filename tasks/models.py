@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed, pre_save
+from rest_framework.exceptions import ValidationError
 
 from tasks.utils import upload_file
 
@@ -16,7 +17,7 @@ class Label(models.Model):
     related_name = 'labels'
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
-    title = models.CharField(primary_key=True, max_length=256)
+    title = models.CharField(max_length=256)
 
     def __str__(self):
         return f'{self.owner.username} - {self.title}'
@@ -30,10 +31,11 @@ class Project(models.Model):
         ('B', 'Board'),
     ]
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
-    user = models.ManyToManyField(User, blank=True, null=True, related_name=related_name)
+    user = models.ManyToManyField(User, blank=True, related_name=related_name)
     title = models.CharField(max_length=512)
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
-    color = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
+    label = models.ManyToManyField(Label, blank=True, related_name=related_name)
     background = models.ImageField(upload_to=upload_file, blank=True, null=True)
     view = models.CharField(max_length=1, default='L', choices=VIEWS_CHOICES)
     archive = models.BooleanField(default=False)
@@ -43,6 +45,9 @@ class Project(models.Model):
 
     def __str__(self):
         return f'{self.owner.username} - {self.title}'
+
+    class Meta:
+        unique_together = [['owner', 'position']]
 
 
 class Section(models.Model):
@@ -109,6 +114,22 @@ class Activity(models.Model):
         return f'{self.owner.username} - {self.pk}'
 
 
+def ProjectPreSave(sender, instance, *args, **kwargs):
+    if not instance.position:
+        qs = Project.objects.filter(owner=instance.owner).order_by('-id')
+        if qs.exists():
+            instance.position = qs[0].position + 1
+        else:
+            instance.position = 1
+
+
+def LabelProjectM2MChanged(sender, instance, *args, **kwargs):
+    if 'post' in kwargs['action']:
+        for label in instance.label.all():
+            if label.owner != instance.owner:
+                raise ValidationError('Invalid Label')
+
+
 # def ProjectUserM2MChanged(sender, instance, *args, **kwargs):
 #     if 'post' in kwargs['action']:
 #         if instance.owner not in instance.user.all():
@@ -116,3 +137,5 @@ class Activity(models.Model):
 #
 #
 # m2m_changed.connect(ProjectUserM2MChanged, Project.user.through)
+m2m_changed.connect(LabelProjectM2MChanged, Project.label.through)
+pre_save.connect(ProjectPreSave, Project)

@@ -21,7 +21,7 @@ from ListToDo import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('task/', include('tasks.urls')),
+    path('', include('tasks.urls')),
     path('', include('users.urls')),
 ]
 if settings.DEBUG:

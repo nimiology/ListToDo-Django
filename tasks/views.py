@@ -1,14 +1,14 @@
 from rest_framework.exceptions import AuthenticationFailed
 
 from tasks.models import Project
-from tasks.permissions import IsCreatorOrCreatOnly
+from tasks.permissions import IsOwnerOrCreatOnly
 from tasks.serializers import ProjectSerializer
 from tasks.utils import CreateRetrieveUpdateDestroyAPIView
 
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsCreatorOrCreatOnly]
+    permission_classes = [IsOwnerOrCreatOnly]
     queryset = Project.objects.all()
 
     def perform_create(self, serializer):
@@ -16,3 +16,6 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
             return serializer.save(owner=self.request.user)
         else:
             raise AuthenticationFailed
+
+    def perform_update(self, serializer):
+        return serializer.save(owner=self.get_object().owner)
