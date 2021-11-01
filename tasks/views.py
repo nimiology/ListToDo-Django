@@ -1,5 +1,6 @@
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.generics import ListAPIView
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from tasks.models import Project, Label
 from tasks.permissions import IsOwnerOrCreatOnly
@@ -9,14 +10,11 @@ from tasks.utils import CreateRetrieveUpdateDestroyAPIView
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsOwnerOrCreatOnly]
+    permission_classes = [IsOwnerOrCreatOnly, IsAuthenticated]
     queryset = Project.objects.all()
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            return serializer.save(owner=self.request.user)
-        else:
-            raise AuthenticationFailed
+        return serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.get_object().owner)
@@ -24,24 +22,34 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
 
 class MyProjectsAPI(ListAPIView):
     serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Project.objects.filter(owner=self.request.user)
+        return Project.objects.filter(owner=self.request.user)
+
+
+class AddToProject(RetrieveAPIView):
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Project.objects.all()
+    lookup_field = 'inviteSlug'
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_object()
+        if project.owner != request.user:
+            project.user.add(request.user)
+            return self.retrieve(request, *args, **kwargs)
         else:
-            raise AuthenticationFailed
+            raise ValidationError("You can't join to your own project!")
 
 
 class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [IsOwnerOrCreatOnly]
+    permission_classes = [IsOwnerOrCreatOnly, IsAuthenticated]
     queryset = Label.objects.all()
 
     def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            return serializer.save(owner=self.request.user)
-        else:
-            raise AuthenticationFailed
+        return serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.get_object().owner)
@@ -49,9 +57,7 @@ class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
 
 class MyLabelsAPI(ListAPIView):
     serializer_class = LabelSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Label.objects.filter(owner=self.request.user)
-        else:
-            raise AuthenticationFailed
+        return Label.objects.filter(owner=self.request.user)

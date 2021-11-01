@@ -34,7 +34,7 @@ class Project(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
     user = models.ManyToManyField(User, blank=True, related_name=related_name)
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
-    inviteLink = models.SlugField(blank=True)
+    inviteSlug = models.SlugField(blank=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     label = models.ManyToManyField(Label, blank=True, related_name=related_name)
     background = models.ImageField(upload_to=upload_file, blank=True, null=True)
@@ -116,8 +116,8 @@ class Activity(models.Model):
 
 
 def ProjectPreSave(sender, instance, *args, **kwargs):
-    if instance.inviteLink == '':
-        instance.inviteLink = slug_genrator(Project)
+    if instance.inviteSlug == '':
+        instance.inviteSlug = slug_genrator(Project)
     if not instance.position:
         qs = Project.objects.filter(owner=instance.owner).order_by('-id')
         if qs.exists():
