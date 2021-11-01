@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.signals import post_save, m2m_changed, pre_save
 from rest_framework.exceptions import ValidationError
 
-from tasks.utils import upload_file
+from tasks.utils import upload_file, slug_genrator
 
 
 class Color(models.Model):
@@ -30,10 +30,11 @@ class Project(models.Model):
         ('L', 'List'),
         ('B', 'Board'),
     ]
+    title = models.CharField(max_length=512)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
     user = models.ManyToManyField(User, blank=True, related_name=related_name)
-    title = models.CharField(max_length=512)
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
+    inviteLink = models.SlugField(blank=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     label = models.ManyToManyField(Label, blank=True, related_name=related_name)
     background = models.ImageField(upload_to=upload_file, blank=True, null=True)
@@ -115,6 +116,8 @@ class Activity(models.Model):
 
 
 def ProjectPreSave(sender, instance, *args, **kwargs):
+    if instance.inviteLink == '':
+        instance.inviteLink = slug_genrator(Project)
     if not instance.position:
         qs = Project.objects.filter(owner=instance.owner).order_by('-id')
         if qs.exists():
