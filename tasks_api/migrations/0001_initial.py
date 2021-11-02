@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import tasks.utils
+import tasks_api.utils
 
 
 class Migration(migrations.Migration):
@@ -34,16 +34,16 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=512)),
-                ('background', models.ImageField(blank=True, null=True, upload_to=tasks.utils.upload_file)),
+                ('background', models.ImageField(blank=True, null=True, upload_to=tasks_api.utils.upload_file)),
                 ('view', models.CharField(choices=[('L', 'List'), ('B', 'Board')], default='L', max_length=1)),
                 ('archive', models.BooleanField(default=False)),
                 ('position', models.PositiveIntegerField(default=0)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('schedule', models.DateTimeField(blank=True, null=True)),
-                ('color', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='projects', to='tasks.color')),
-                ('label', models.ManyToManyField(blank=True, related_name='projects', to='tasks.Label')),
+                ('color', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='projects', to='tasks_api.color')),
+                ('label', models.ManyToManyField(blank=True, related_name='projects', to='tasks_api.Label')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='projects_owner', to=settings.AUTH_USER_MODEL)),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subprojects', to='tasks.project')),
+                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subprojects', to='tasks_api.project')),
                 ('user', models.ManyToManyField(blank=True, related_name='projects', to=settings.AUTH_USER_MODEL)),
             ],
         ),
@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=512)),
                 ('position', models.PositiveIntegerField(default=0)),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='section', to='tasks.project')),
+                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='section', to='tasks_api.project')),
             ],
         ),
         migrations.CreateModel(
@@ -67,13 +67,13 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('schedule', models.DateTimeField(blank=True, null=True)),
                 ('complete', models.DateTimeField(blank=True, null=True)),
-                ('assignee', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to=settings.AUTH_USER_MODEL)),
-                ('color', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks', to='tasks.color')),
-                ('label', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks', to='tasks.label')),
+                ('assignee', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks_api', to=settings.AUTH_USER_MODEL)),
+                ('color', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks_api', to='tasks_api.color')),
+                ('label', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tasks_api', to='tasks_api.label')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='task_creator', to=settings.AUTH_USER_MODEL)),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='tasks.project')),
-                ('section', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='tasks.section')),
-                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subcategories', to='tasks.task')),
+                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks_api', to='tasks_api.project')),
+                ('section', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks_api', to='tasks_api.section')),
+                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subcategories', to='tasks_api.task')),
             ],
         ),
         migrations.CreateModel(
@@ -81,11 +81,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('description', models.TextField(blank=True, null=True)),
-                ('file', models.FileField(blank=True, null=True, upload_to=tasks.utils.upload_file)),
+                ('file', models.FileField(blank=True, null=True, upload_to=tasks_api.utils.upload_file)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to=settings.AUTH_USER_MODEL)),
-                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks.project')),
-                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks.task')),
+                ('project', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks_api.project')),
+                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks_api.task')),
             ],
         ),
         migrations.CreateModel(
@@ -95,7 +95,7 @@ class Migration(migrations.Migration):
                 ('description', models.TextField()),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='activity', to=settings.AUTH_USER_MODEL)),
-                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity', to='tasks.task')),
+                ('task', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity', to='tasks_api.task')),
             ],
         ),
     ]

@@ -4,10 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, get_object_or_404
 
-from tasks.models import Project, Label, Color, Section
-from tasks.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, IsItOwnerOrUsersProjectWithSection
-from tasks.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer
-from tasks.utils import CreateRetrieveUpdateDestroyAPIView
+from tasks_api.models import Project, Label, Color, Section
+from tasks_api.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, IsItOwnerOrUsersProjectWithSection
+from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer
+from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView
 
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):

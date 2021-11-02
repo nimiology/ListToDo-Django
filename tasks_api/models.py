@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.signals import post_save, m2m_changed, pre_save
 from rest_framework.exceptions import ValidationError
 
-from tasks.utils import upload_file, slug_genrator
+from tasks_api.utils import upload_file, slug_genrator
 
 
 class Color(models.Model):
@@ -61,7 +61,7 @@ class Section(models.Model):
 
 
 class Task(models.Model):
-    related_name = 'tasks'
+    related_name = 'tasks_api'
     PRIORITY_CHOICES = [
         ('1', 'Priority 1'),
         ('2', 'Priority 2'),

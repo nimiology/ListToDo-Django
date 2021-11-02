@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'djoser',
     # APPS
-    'tasks.apps.TasksConfig',
+    'tasks_api.apps.TasksConfig',
 ]
 
 

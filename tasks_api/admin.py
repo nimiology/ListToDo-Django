@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from tasks.models import Task, Activity, Comment, Section, Project, Label, Color
+from tasks_api.models import Task, Activity, Comment, Section, Project, Label, Color
 
 admin.site.register(Task)
 admin.site.register(Color)
