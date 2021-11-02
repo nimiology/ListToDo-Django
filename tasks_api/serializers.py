@@ -1,7 +1,8 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
+from rest_framework.serializers import ReadOnlyField
 
-from tasks_api.models import Project, Label, Color, Section
+from tasks_api.models import Project, Label, Color, Section, Task
 
 
 class ColorSerializer(serializers.ModelSerializer):
@@ -32,8 +33,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
-
     class Meta:
         model = Section
         fields = '__all__'
@@ -41,3 +40,20 @@ class SectionSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['project'] = ProjectSerializer(read_only=True)
         return super(SectionSerializer, self).to_representation(instance)
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=True, required=False)
+    project = ProjectSerializer(read_only=True, required=False)
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        self.fields['assignee'] = UserSerializer(read_only=True)
+        self.fields['section'] = SectionSerializer(read_only=True)
+        self.fields['task'] = ReadOnlyField(source='task.title')
+        self.fields['color'] = ColorSerializer(read_only=True)
+        self.fields['label'] = LabelSerializer(read_only=True)
+        return super(TaskSerializer, self).to_representation(instance)

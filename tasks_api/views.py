@@ -4,10 +4,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, get_object_or_404
 
-from tasks_api.models import Project, Label, Color, Section
-from tasks_api.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, IsItOwnerOrUsersProjectWithSection
-from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer
-from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView
+from tasks_api.models import Project, Label, Color, Section, Task
+from tasks_api.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
+    IsItOwnerOrUsersProjectWithSection
+from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, TaskSerializer
+from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task
 
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
@@ -98,5 +99,40 @@ class ProjectSectionsAPI(ListAPIView):
         project = get_object_or_404(Project, id=self.kwargs['pk'])
         if self.request.user in project.users.all() or self.request.user == project.owner:
             return project.sections.all()
+        else:
+            raise NotFound
+
+
+class CreateTaskAPI(CreateAPIView):
+    serializer_class = TaskSerializer
+    queryset = Project.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+
+    def perform_create(self, serializer):
+        project = self.get_object()
+        check_creating_task(serializer, project, self.request.user)
+        return serializer.save(owner=self.request.user, project=project)
+
+
+class TaskAPI(RetrieveUpdateDestroyAPIView):
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithSection]
+
+    def perform_update(self, serializer):
+        obj = self.get_object()
+        project = obj.project
+        check_creating_task(serializer, project, self.request.user)
+        return serializer.save(owner=obj.owner, project=obj.project)
+
+
+class ProjectTasksAPI(ListAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project = get_object_or_404(Project, id=self.kwargs['pk'])
+        if self.request.user in project.users.all() or self.request.user == project.owner:
+            return project.tasks.all()
         else:
             raise NotFound

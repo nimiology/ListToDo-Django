@@ -61,7 +61,7 @@ class Section(models.Model):
 
 
 class Task(models.Model):
-    related_name = 'tasks_api'
+    related_name = 'tasks'
     PRIORITY_CHOICES = [
         ('1', 'Priority 1'),
         ('2', 'Priority 2'),
@@ -71,7 +71,7 @@ class Task(models.Model):
     ]
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_creator')
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name=related_name)
     assignee = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name=related_name)
     section = models.ForeignKey(Section, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     task = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subcategories')
@@ -107,7 +107,10 @@ class Activity(models.Model):
     related_name = 'activity'
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
 

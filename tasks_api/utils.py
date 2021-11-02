@@ -2,6 +2,7 @@ import os
 import random
 import string
 
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView
 
 
@@ -29,3 +30,24 @@ def slug_genrator(cls):
 
 class CreateRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView, CreateAPIView):
     pass
+
+
+def check_creating_task(serializer, project, user):
+    assignee = serializer.validated_data.get('assignee')
+    section = serializer.validated_data.get('section')
+    task = serializer.validated_data.get('task')
+    label = serializer.validated_data.get('label')
+    if assignee:
+        if not assignee in project.users.all() and assignee != project.owner:
+            raise ValidationError('The assignee is not in the project!')
+    if section:
+        if section.project != project:
+            raise ValidationError('The section is not in the project!')
+    if task:
+        if task.project != project:
+            raise ValidationError('The task is not found!')
+    if label:
+        if label.owner != user:
+            raise ValidationError('The label is not found!')
+
+# def is_it_in_project(request, model):
