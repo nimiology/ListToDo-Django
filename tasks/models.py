@@ -32,7 +32,7 @@ class Project(models.Model):
     ]
     title = models.CharField(max_length=512)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
-    user = models.ManyToManyField(User, blank=True, related_name=related_name)
+    users = models.ManyToManyField(User, blank=True, related_name=related_name)
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
     inviteSlug = models.SlugField(blank=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
@@ -53,7 +53,7 @@ class Project(models.Model):
 
 class Section(models.Model):
     title = models.CharField(max_length=512)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name='section')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name='sections')
     position = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -120,6 +120,15 @@ def ProjectPreSave(sender, instance, *args, **kwargs):
         instance.inviteSlug = slug_genrator(Project)
     if not instance.position:
         qs = Project.objects.filter(owner=instance.owner).order_by('-id')
+        if qs.exists():
+            instance.position = qs[0].position + 1
+        else:
+            instance.position = 1
+
+
+def SectionPreSave(sender, instance, *args, **kwargs):
+    if not instance.position:
+        qs = Section.objects.filter(owner=instance.owner).order_by('-id')
         if qs.exists():
             instance.position = qs[0].position + 1
         else:

@@ -1,10 +1,12 @@
-from rest_framework.exceptions import ValidationError
+from django.db.models import Q
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
+    GenericAPIView, get_object_or_404
 
-from tasks.models import Project, Label, Color
-from tasks.permissions import IsOwnerOrCreatOnly
-from tasks.serializers import ProjectSerializer, LabelSerializer, ColorSerializer
+from tasks.models import Project, Label, Color, Section
+from tasks.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, IsItOwnerOrUsersProjectWithSection
+from tasks.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer
 from tasks.utils import CreateRetrieveUpdateDestroyAPIView
 
 
@@ -67,3 +69,34 @@ class ColorsAPI(ListAPIView):
     serializer_class = ColorSerializer
     permission_classes = [IsAuthenticated]
     queryset = Color.objects.all()
+
+
+class CreateSectionAPI(CreateAPIView):
+    serializer_class = SectionSerializer
+    queryset = Project.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+
+    def perform_create(self, serializer):
+        return serializer.save(project=self.get_object())
+
+
+class SectionAPI(RetrieveUpdateDestroyAPIView):
+    serializer_class = SectionSerializer
+    queryset = Section.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithSection]
+
+    def perform_update(self, serializer):
+        section = self.get_object()
+        return serializer.save(project=section.project)
+
+
+class ProjectSectionsAPI(ListAPIView):
+    serializer_class = SectionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project = get_object_or_404(Project, id=self.kwargs['pk'])
+        if self.request.user in project.users.all() or self.request.user == project.owner:
+            return project.sections.all()
+        else:
+            raise NotFound

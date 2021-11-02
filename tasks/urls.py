@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from tasks.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, AddToProject, ColorsAPI
+from tasks.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, AddToProject, ColorsAPI, CreateSectionAPI, \
+    SectionAPI, ProjectSectionsAPI
 
 urlpatterns = [
     path('project/', ProjectsAPI.as_view()),
@@ -14,4 +15,8 @@ urlpatterns = [
     path('labels/', MyLabelsAPI.as_view()),
 
     path('colors/', ColorsAPI.as_view()),
+
+    path('project/<int:pk>/section/', CreateSectionAPI.as_view()),
+    path('project/<int:pk>/sections/', ProjectSectionsAPI.as_view()),
+    path('section/<int:pk>/', SectionAPI.as_view()),
 ]

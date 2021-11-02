@@ -1,7 +1,7 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from tasks.models import Project, Label, Color
+from tasks.models import Project, Label, Color, Section
 
 
 class ColorSerializer(serializers.ModelSerializer):
@@ -26,6 +26,18 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_representation(self, instance):
-        self.fields['user'] = UserSerializer(read_only=True, many=True)
+        self.fields['users'] = UserSerializer(read_only=True, many=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(ProjectSerializer, self).to_representation(instance)
+
+
+class SectionSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=True, required=False)
+
+    class Meta:
+        model = Section
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        self.fields['project'] = ProjectSerializer(read_only=True)
+        return super(SectionSerializer, self).to_representation(instance)
