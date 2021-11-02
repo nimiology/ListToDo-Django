@@ -1,7 +1,13 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from tasks.models import Project, Label
+from tasks.models import Project, Label, Color
+
+
+class ColorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Color
+        fields = '__all__'
 
 
 class LabelSerializer(serializers.ModelSerializer):

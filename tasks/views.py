@@ -2,9 +2,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 
-from tasks.models import Project, Label
+from tasks.models import Project, Label, Color
 from tasks.permissions import IsOwnerOrCreatOnly
-from tasks.serializers import ProjectSerializer, LabelSerializer
+from tasks.serializers import ProjectSerializer, LabelSerializer, ColorSerializer
 from tasks.utils import CreateRetrieveUpdateDestroyAPIView
 
 
@@ -61,3 +61,9 @@ class MyLabelsAPI(ListAPIView):
 
     def get_queryset(self):
         return Label.objects.filter(owner=self.request.user)
+
+
+class ColorsAPI(ListAPIView):
+    serializer_class = ColorSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Color.objects.all()
