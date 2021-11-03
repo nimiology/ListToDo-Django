@@ -50,4 +50,11 @@ def check_creating_task(serializer, project, user):
         if label.owner != user:
             raise ValidationError('The label is not found!')
 
+
+def check_task_in_project(serializer, project):
+    task = serializer.validated_data.get('task')
+    if task:
+        if task.project != project:
+            raise ValidationError("The task is not in the project!")
+
 # def is_it_in_project(request, model):

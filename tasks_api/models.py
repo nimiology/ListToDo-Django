@@ -93,9 +93,9 @@ class Comment(models.Model):
     related_name = 'comments'
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=related_name)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name=related_name)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField()
     file = models.FileField(upload_to=upload_file, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -120,9 +120,9 @@ class Activity(models.Model):
 
 def ProjectPreSave(sender, instance, *args, **kwargs):
     if instance.inviteSlug == '':
-        instance.inviteSlug = slug_genrator(Project)
+        instance.inviteSlug = slug_genrator(sender)
     if not instance.position:
-        qs = Project.objects.filter(owner=instance.owner).order_by('-id')
+        qs = sender.objects.filter(owner=instance.owner).order_by('-id')
         if qs.exists():
             instance.position = qs[0].position + 1
         else:
@@ -131,7 +131,16 @@ def ProjectPreSave(sender, instance, *args, **kwargs):
 
 def SectionPreSave(sender, instance, *args, **kwargs):
     if not instance.position:
-        qs = Section.objects.filter(owner=instance.owner).order_by('-id')
+        qs = sender.objects.filter(project=instance.project).order_by('-id')
+        if qs.exists():
+            instance.position = qs[0].position + 1
+        else:
+            instance.position = 1
+
+
+def TaskPreSave(sender, instance, *args, **kwargs):
+    if not instance.position:
+        qs = sender.objects.filter(section=instance.project).order_by('-id')
         if qs.exists():
             instance.position = qs[0].position + 1
         else:
@@ -145,12 +154,7 @@ def LabelProjectM2MChanged(sender, instance, *args, **kwargs):
                 raise ValidationError('Invalid Label')
 
 
-# def ProjectUserM2MChanged(sender, instance, *args, **kwargs):
-#     if 'post' in kwargs['action']:
-#         if instance.owner not in instance.user.all():
-#             instance.user.add(instance.owner)
-#
-#
-# m2m_changed.connect(ProjectUserM2MChanged, Project.user.through)
 m2m_changed.connect(LabelProjectM2MChanged, Project.label.through)
 pre_save.connect(ProjectPreSave, Project)
+pre_save.connect(SectionPreSave, Section)
+pre_save.connect(TaskPreSave, Task)

@@ -4,11 +4,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, get_object_or_404
 
-from tasks_api.models import Project, Label, Color, Section, Task
+from tasks_api.models import Project, Label, Color, Section, Task, Comment
 from tasks_api.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
-    IsItOwnerOrUsersProjectWithSection
-from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, TaskSerializer
-from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task
+    IsItOwnerOrUsersProjectWithOBJ
+from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
+    TaskSerializer, CommentSerializer
+from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project
 
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
@@ -28,7 +29,8 @@ class MyProjectsAPI(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Project.objects.filter(owner=self.request.user)
+        user = self.request.user
+        return Project.objects.filter(Q(owner=user)|Q(users__in=[user])).order_by('position')
 
 
 class AddToProject(RetrieveAPIView):
@@ -84,7 +86,7 @@ class CreateSectionAPI(CreateAPIView):
 class SectionAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SectionSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithSection]
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
         section = self.get_object()
@@ -98,7 +100,7 @@ class ProjectSectionsAPI(ListAPIView):
     def get_queryset(self):
         project = get_object_or_404(Project, id=self.kwargs['pk'])
         if self.request.user in project.users.all() or self.request.user == project.owner:
-            return project.sections.all()
+            return project.sections.all().order_by('position')
         else:
             raise NotFound
 
@@ -117,7 +119,7 @@ class CreateTaskAPI(CreateAPIView):
 class TaskAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithSection]
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
         obj = self.get_object()
@@ -134,5 +136,52 @@ class ProjectTasksAPI(ListAPIView):
         project = get_object_or_404(Project, id=self.kwargs['pk'])
         if self.request.user in project.users.all() or self.request.user == project.owner:
             return project.tasks.all()
+        else:
+            raise NotFound
+
+
+class CreateCommentAPI(CreateAPIView):
+    serializer_class = CommentSerializer
+    queryset = Project.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+
+    def perform_create(self, serializer):
+        project = self.get_object()
+        check_task_in_project(serializer, project)
+        return serializer.save(owner=self.request.user, project=project)
+
+
+class CommentAPI(RetrieveUpdateDestroyAPIView):
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
+
+    def perform_update(self, serializer):
+        comment = self.get_object()
+        check_task_in_project(serializer, comment.project)
+        return serializer.save(owner=comment.owner, project=comment.project)
+
+
+class ProjectCommentsAPI(ListAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        project = get_object_or_404(Project, id=self.kwargs['pk'])
+        if self.request.user in project.users.all() or self.request.user == project.owner:
+            return project.comments.all().order_by('-id')
+        else:
+            raise NotFound
+
+
+class TaskCommentsAPI(ListAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        task = get_object_or_404(Task, id=self.kwargs['pk'])
+        project = task.project
+        if self.request.user in project.users.all() or self.request.user == project.owner:
+            return task.comments.all().order_by('-id')
         else:
             raise NotFound
