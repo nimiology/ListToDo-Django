@@ -28,6 +28,7 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
 class MyProjectsAPI(ListAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
+    filterset_fields = ['title', 'project', 'color', 'label', 'archive', 'created', 'schedule', ]
 
     def get_queryset(self):
         user = self.request.user
@@ -94,16 +95,15 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
         return serializer.save(project=section.project)
 
 
-class ProjectSectionsAPI(ListAPIView):
+class SectionsAPI(ListAPIView):
     serializer_class = SectionSerializer
     permission_classes = [IsAuthenticated]
+    filterset_fields = ['title', 'project', 'position', 'archive', ]
 
     def get_queryset(self):
-        project = get_object_or_404(Project, id=self.kwargs['pk'])
-        if self.request.user in project.users.all() or self.request.user == project.owner:
-            return project.sections.all().order_by('position')
-        else:
-            raise NotFound
+        user = self.request.user
+        sections = Section.objects.filter(Q(project__owner=user) | Q(project__users__in=[user])).order_by('position')
+        return sections
 
 
 class CreateTaskAPI(CreateAPIView):
@@ -133,29 +133,12 @@ class TasksAPI(ListAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ['title', 'assignee', 'section', 'task', 'description', 'color', 'label', 'priority', 'position',
-                       'completed', 'created', 'schedule', 'completedDate', ]
+                        'completed', 'created', 'schedule', 'completedDate', ]
 
     def get_queryset(self):
         user = self.request.user
-        projects = Project.objects.filter(Q(owner=user) | Q(users__in=[user]))
-        objs = []
-
-        for project in projects:
-            for task in project.tasks.all():
-                objs.append(task)
-        return objs
-
-
-class ProjectTasksAPI(ListAPIView):
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        project = get_object_or_404(Project, id=self.kwargs['pk'])
-        if self.request.user in project.users.all() or self.request.user == project.owner:
-            return project.tasks.all()
-        else:
-            raise NotFound
+        tasks = Task.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+        return tasks
 
 
 class CreateCommentAPI(CreateAPIView):
@@ -180,26 +163,12 @@ class CommentAPI(RetrieveUpdateDestroyAPIView):
         return serializer.save(owner=comment.owner, project=comment.project)
 
 
-class ProjectCommentsAPI(ListAPIView):
+class CommentsAPI(ListAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
+    filterset_fields = ['project', 'task', ]
 
     def get_queryset(self):
-        project = get_object_or_404(Project, id=self.kwargs['pk'])
-        if self.request.user in project.users.all() or self.request.user == project.owner:
-            return project.comments.all().order_by('-id')
-        else:
-            raise NotFound
-
-
-class TaskCommentsAPI(ListAPIView):
-    serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        task = get_object_or_404(Task, id=self.kwargs['pk'])
-        project = task.project
-        if self.request.user in project.users.all() or self.request.user == project.owner:
-            return task.comments.all().order_by('-id')
-        else:
-            raise NotFound
+        user = self.request.user
+        comments = Comment.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+        return comments
