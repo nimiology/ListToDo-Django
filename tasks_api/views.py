@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView, get_object_or_404
+    get_object_or_404
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment
 from tasks_api.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
@@ -21,7 +21,8 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
         return serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
-        return serializer.save(owner=self.get_object().owner)
+        project = self.get_object()
+        return serializer.save(owner=project.owner)
 
 
 class MyProjectsAPI(ListAPIView):
@@ -30,7 +31,7 @@ class MyProjectsAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Project.objects.filter(Q(owner=user)|Q(users__in=[user])).order_by('position')
+        return Project.objects.filter(Q(owner=user) | Q(users__in=[user])).order_by('position')
 
 
 class AddToProject(RetrieveAPIView):
@@ -126,6 +127,23 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
         project = obj.project
         check_creating_task(serializer, project, self.request.user)
         return serializer.save(owner=obj.owner, project=obj.project)
+
+
+class TasksAPI(ListAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['title', 'assignee', 'section', 'task', 'description', 'color', 'label', 'priority', 'position',
+                       'completed', 'created', 'schedule', 'completedDate', ]
+
+    def get_queryset(self):
+        user = self.request.user
+        projects = Project.objects.filter(Q(owner=user) | Q(users__in=[user]))
+        objs = []
+
+        for project in projects:
+            for task in project.tasks.all():
+                objs.append(task)
+        return objs
 
 
 class ProjectTasksAPI(ListAPIView):

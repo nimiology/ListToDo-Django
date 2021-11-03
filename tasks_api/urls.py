@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, AddToProject, ColorsAPI, \
     CreateSectionAPI, \
-    SectionAPI, ProjectSectionsAPI, CreateTaskAPI, TaskCommentsAPI, ProjectCommentsAPI, CreateCommentAPI, CommentAPI
+    SectionAPI, ProjectSectionsAPI, CreateTaskAPI, TaskCommentsAPI, ProjectCommentsAPI, CreateCommentAPI, CommentAPI, \
+    TaskAPI, ProjectTasksAPI, TasksAPI
 
 urlpatterns = [
     path('project/', ProjectsAPI.as_view()),
@@ -22,6 +23,9 @@ urlpatterns = [
     path('section/<int:pk>/', SectionAPI.as_view()),
 
     path('project/<int:pk>/task/', CreateTaskAPI.as_view()),
+    path('tasks/', TasksAPI.as_view()),
+    path('project/<int:pk>/tasks/', ProjectTasksAPI.as_view()),
+    path('task/<int:pk>/', TaskAPI.as_view()),
 
     path('project/<int:pk>/comment/', CreateCommentAPI.as_view()),
     path('project/<int:pk>/comments/', ProjectCommentsAPI.as_view()),
