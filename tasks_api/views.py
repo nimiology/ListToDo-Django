@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView,
     get_object_or_404
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment
-from tasks_api.permissions import IsOwnerOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
+from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
     IsItOwnerOrUsersProjectWithOBJ
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer
@@ -14,7 +14,7 @@ from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_t
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsOwnerOrCreatOnly, IsAuthenticated]
+    permission_classes = [IsInProjectOrCreatOnly, IsAuthenticated]
     queryset = Project.objects.all()
 
     def perform_create(self, serializer):
@@ -52,7 +52,7 @@ class AddToProject(RetrieveAPIView):
 
 class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [IsOwnerOrCreatOnly, IsAuthenticated]
+    permission_classes = [IsInProjectOrCreatOnly, IsAuthenticated]
     queryset = Label.objects.all()
 
     def perform_create(self, serializer):

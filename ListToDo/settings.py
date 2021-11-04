@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'djoser',
     # APPS
     'tasks_api.apps.TasksConfig',
+    'users.apps.UsersConfig',
 ]
 
 
