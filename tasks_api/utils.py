@@ -20,7 +20,7 @@ def upload_file(instance, filename):
     return f"{instance.owner.username}/{final_name}"
 
 
-def slug_genrator(cls):
+def slug_genrator():
     letters_str = string.ascii_letters + string.digits
     letters = list(letters_str)
     SLUG = "".join(random.choice(letters) for _ in range(40))
@@ -56,5 +56,3 @@ def check_task_in_project(serializer, project):
     if task:
         if task.project != project:
             raise ValidationError("The task is not in the project!")
-
-# def is_it_in_project(request, model):

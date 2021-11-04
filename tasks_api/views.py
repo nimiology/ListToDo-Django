@@ -1,15 +1,15 @@
 from django.db.models import Q
-from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    get_object_or_404
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment
+from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
     IsItOwnerOrUsersProjectWithOBJ
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
-    TaskSerializer, CommentSerializer
-from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project
+    TaskSerializer, CommentSerializer, ActivitySerializer
+from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
+    slug_genrator
 
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
@@ -18,11 +18,17 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
 
     def perform_create(self, serializer):
-        return serializer.save(owner=self.request.user)
+        user = self.request.user
+        obj = serializer.save(owner=user)
+        Activity(assignee=user, project=obj, status='C').save()
+        return obj
 
     def perform_update(self, serializer):
+        user = self.request.user
         project = self.get_object()
-        return serializer.save(owner=project.owner)
+        obj = serializer.save(owner=project.owner)
+        Activity(assignee=user, project=obj, status='U').save()
+        return obj
 
 
 class MyProjectsAPI(ListAPIView):
@@ -48,6 +54,18 @@ class AddToProject(RetrieveAPIView):
             return self.retrieve(request, *args, **kwargs)
         else:
             raise ValidationError("You can't join to your own project!")
+
+
+class ChangeInviteSlugProject(RetrieveAPIView):
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    queryset = Project.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.inviteSlug = slug_genrator()
+        obj.save()
+        return self.retrieve(request, *args, **kwargs)
 
 
 class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
@@ -82,7 +100,12 @@ class CreateSectionAPI(CreateAPIView):
     permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
 
     def perform_create(self, serializer):
-        return serializer.save(project=self.get_object())
+        user = self.request.user
+        project = self.get_object()
+        obj = serializer.save(project=project)
+        Activity(assignee=user, project=project, section=obj, status='C',
+                 description=f'{user} created a section: {obj.title}').save()
+        return obj
 
 
 class SectionAPI(RetrieveUpdateDestroyAPIView):
@@ -91,8 +114,20 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
+        user = self.request.user
         section = self.get_object()
-        return serializer.save(project=section.project)
+        project = section.project
+        obj = serializer.save(project=project)
+        Activity(assignee=user, project=project, section=obj, status='U',
+                 description=f'{user} edited a section: {obj.title}').save()
+        return obj
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        project = instance.project
+        Activity(assignee=user, project=project, status='D',
+                 description=f'{user} deleted a section: {instance.title}').save()
+        return instance.delete()
 
 
 class SectionsAPI(ListAPIView):
@@ -112,9 +147,13 @@ class CreateTaskAPI(CreateAPIView):
     permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
 
     def perform_create(self, serializer):
+        user = self.request.user
         project = self.get_object()
         check_creating_task(serializer, project, self.request.user)
-        return serializer.save(owner=self.request.user, project=project)
+        obj = serializer.save(owner=self.request.user, project=project)
+        Activity(assignee=user, project=project, task=obj, status='C',
+                 description=f'{user} created a task: {obj.title}').save()
+        return obj
 
 
 class TaskAPI(RetrieveUpdateDestroyAPIView):
@@ -123,10 +162,21 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
+        user = self.request.user
         obj = self.get_object()
         project = obj.project
         check_creating_task(serializer, project, self.request.user)
-        return serializer.save(owner=obj.owner, project=obj.project)
+        obj = serializer.save(owner=obj.owner, project=project)
+        Activity(assignee=user, project=project, task=obj, status='U',
+                 description=f'{user} edited a task: {obj.title}').save()
+        return obj
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        project = instance.project
+        Activity(assignee=user, project=project, status='D',
+                 description=f'{user} deleted a task: {instance.title}').save()
+        return instance.delete()
 
 
 class TasksAPI(ListAPIView):
@@ -147,9 +197,13 @@ class CreateCommentAPI(CreateAPIView):
     permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
 
     def perform_create(self, serializer):
+        user = self.request.user
         project = self.get_object()
         check_task_in_project(serializer, project)
-        return serializer.save(owner=self.request.user, project=project)
+        obj = serializer.save(owner=self.request.user, project=project)
+        Activity(assignee=user, project=project, comment=obj, status='C',
+                 description=f'{user} created a comment: {obj.project.title}').save()
+        return obj
 
 
 class CommentAPI(RetrieveUpdateDestroyAPIView):
@@ -158,9 +212,21 @@ class CommentAPI(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
-        comment = self.get_object()
-        check_task_in_project(serializer, comment.project)
-        return serializer.save(owner=comment.owner, project=comment.project)
+        user = self.request.user
+        obj = self.get_object()
+        project = obj.project
+        check_task_in_project(serializer, obj.project)
+        obj = serializer.save(owner=obj.owner, project=project)
+        Activity(assignee=user, project=project, comment=obj, status='U',
+                 description=f'{user} edited a comment: {obj.project.title}').save()
+        return obj
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        project = instance.project
+        Activity(assignee=user, project=project, status='D',
+                 description=f'{user} deleted a comment: {instance.project.title}').save()
+        return instance.delete()
 
 
 class CommentsAPI(ListAPIView):
@@ -172,3 +238,13 @@ class CommentsAPI(ListAPIView):
         user = self.request.user
         comments = Comment.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
         return comments
+
+
+class ActivityAPI(ListAPIView):
+    serializer_class = ActivitySerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['assignee', 'project', 'section', 'task', 'comment', 'status', ]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Activity.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))

@@ -1,9 +1,9 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ReadOnlyField
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment
+from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
 
 
 class ColorSerializer(serializers.ModelSerializer):
@@ -26,11 +26,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
+        read_only_fields = ('inviteSlug',)
 
     def to_representation(self, instance):
         self.fields['users'] = UserSerializer(read_only=True, many=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(ProjectSerializer, self).to_representation(instance)
+
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -76,7 +78,20 @@ class CommentSerializer(serializers.ModelSerializer):
                 raise ValidationError({"file": ["The file must be less than 10MB"]})
         return attrs
 
-
     def to_representation(self, instance):
         self.fields['task'] = TaskSerializer(read_only=True)
         return super(CommentSerializer, self).to_representation(instance)
+
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        self.fields['assignee'] = UserSerializer(read_only=True)
+        self.fields['project'] = ProjectSerializer(read_only=True)
+        self.fields['section'] = SectionSerializer(read_only=True)
+        self.fields['task'] = TaskSerializer(read_only=True)
+        self.fields['comment'] = CommentSerializer(read_only=True)
+        return super(ActivitySerializer, self).to_representation(instance)
