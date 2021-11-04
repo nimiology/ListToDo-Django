@@ -68,6 +68,15 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
+    def validate(self, attrs):
+        if 'file' in attrs:
+            file_size = attrs['file'].size
+            limit_mb = 10
+            if file_size > limit_mb * 1024 * 1024:
+                raise ValidationError({"file": ["The file must be less than 10MB"]})
+        return attrs
+
+
     def to_representation(self, instance):
         self.fields['task'] = TaskSerializer(read_only=True)
         return super(CommentSerializer, self).to_representation(instance)
