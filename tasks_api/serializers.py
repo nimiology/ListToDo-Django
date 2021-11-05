@@ -22,6 +22,7 @@ class LabelSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True, required=False)
+    users = UserSerializer(read_only=True, many=True)
 
     class Meta:
         model = Project
@@ -29,10 +30,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ('inviteSlug',)
 
     def to_representation(self, instance):
-        self.fields['users'] = UserSerializer(read_only=True, many=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(ProjectSerializer, self).to_representation(instance)
-
 
 
 class SectionSerializer(serializers.ModelSerializer):
