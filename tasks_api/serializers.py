@@ -34,6 +34,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         return super(ProjectSerializer, self).to_representation(instance)
 
 
+
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
