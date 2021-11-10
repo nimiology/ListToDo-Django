@@ -46,7 +46,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True, required=False)
-    project = ProjectSerializer(read_only=True, required=False)
+    section = SectionSerializer(read_only=True, required=False)
 
     class Meta:
         model = Task
@@ -54,7 +54,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.fields['assignee'] = UserSerializer(read_only=True)
-        self.fields['section'] = SectionSerializer(read_only=True)
         self.fields['task'] = ReadOnlyField(source='task.title')
         self.fields['color'] = ColorSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True)

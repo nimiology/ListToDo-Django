@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView,
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
-    IsItOwnerOrUsersProjectWithOBJ
+    IsItOwnerOrUsersProjectWithOBJ, IsItOwnerOrUsersProjectWithSection
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
@@ -152,14 +152,15 @@ class SectionsAPI(ListAPIView):
 
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer
-    queryset = Project.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    queryset = Section.objects.all()
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithSection]
 
     def perform_create(self, serializer):
         user = self.request.user
-        project = self.get_object()
+        section = self.get_object()
+        project = section.project
         check_creating_task(serializer, project, self.request.user)
-        obj = serializer.save(owner=self.request.user, project=project)
+        obj = serializer.save(owner=self.request.user, section=section)
         Activity(assignee=user, project=project, task=obj, status='C',
                  description=f'{user} created a task: {obj.title}').save()
         return obj

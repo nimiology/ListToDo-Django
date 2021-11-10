@@ -23,7 +23,7 @@ urlpatterns = [
     path('section/<int:pk>/', SectionAPI.as_view()),
     path('sections/', SectionsAPI.as_view()),
 
-    path('project/<int:pk>/task/', CreateTaskAPI.as_view()),
+    path('section/<int:pk>/task/', CreateTaskAPI.as_view()),
     path('tasks/', TasksAPI.as_view()),
     path('task/<int:pk>/', TaskAPI.as_view()),
 

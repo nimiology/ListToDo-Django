@@ -8,13 +8,17 @@ class IsOwnerOrCreatOnly(BasePermission):
 
 class IsInProjectOrCreatOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return ((
-                            request.user == obj.owner or request.user in obj.users.all()) and request.user.is_authenticated) or request.method == 'POST'
+        return ((request.user == obj.owner or request.user in obj.users.all()) and request.user.is_authenticated) or request.method == 'POST'
 
 
 class IsItOwnerOrUsersProjectWithProject(BasePermission):
     def has_object_permission(self, request, view, obj):
         return request.user in obj.users.all() or request.user == obj.owner
+
+
+class IsItOwnerOrUsersProjectWithSection(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user in obj.project.users.all() or request.user == obj.project.owner
 
 
 class IsItOwnerOrUsersProjectWithOBJ(BasePermission):

@@ -82,9 +82,8 @@ class Task(models.Model):
     )
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_creator')
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name=related_name)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name=related_name)
     assignee = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name=related_name)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     task = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subcategories')
     title = models.CharField(max_length=512)
     description = models.TextField(null=True, blank=True)
