@@ -8,10 +8,6 @@ from tasks_api.utils import slug_genrator
 def project_pre_save(sender, instance, *args, **kwargs):
     if instance.inviteSlug == '':
         instance.inviteSlug = slug_genrator()
-    if instance.position is None:
-        qs = sender.objects.filter(owner=instance.owner).order_by('-position')
-        instance.position = qs[0].position + 1
-        print(qs[0].position)
 
     if instance.project:
         if instance.project.owner != instance.owner:
@@ -19,13 +15,6 @@ def project_pre_save(sender, instance, *args, **kwargs):
 
 
 def section_pre_save(sender, instance, *args, **kwargs):
-    if not instance.position:
-        qs = sender.objects.filter(project=instance.project).order_by('-position')
-        if qs.exists():
-            instance.position = qs[0].position + 1
-        else:
-            instance.position = 1
-
     if instance.project.view == 'L':
         if len(instance.project.sections.all()) == 1:
             raise ValidationError("You can't create 2 section in this project!")
@@ -72,17 +61,9 @@ def task_pre_save(sender, instance, *args, **kwargs):
     else:
         instance.completedDate = None
 
-    if not instance.position:
-        qs = sender.objects.filter(section=instance.section).order_by('-position')
-        if qs.exists():
-            instance.position = qs[0].position + 1
-        else:
-            instance.position = 1
-
 
 def label_project_m2m_changed(sender, instance, *args, **kwargs):
     if 'post' in kwargs['action']:
         for label in instance.label.all():
             if label.owner != instance.owner:
                 raise ValidationError('Invalid Label')
-

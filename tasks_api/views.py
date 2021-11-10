@@ -2,6 +2,7 @@ from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
@@ -20,8 +21,6 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         obj = serializer.save(owner=user)
-        if serializer.validated_data.get('position') == 0:
-            raise ValidationError("Position should be equal or more than 1!")
         Activity(assignee=user, project=obj, status='C').save()
         return obj
 
@@ -29,15 +28,8 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
         user = self.request.user
         project = self.get_object()
         obj = serializer.save(owner=project.owner)
-        if serializer.validated_data.get('position') == 0:
-            raise ValidationError("Position should be equal or more than 1!")
         Activity(assignee=user, project=obj, status='U').save()
         return obj
-
-    def perform_destroy(self, instance):
-        if instance.position == 0:
-            raise ValidationError("You can't delete this project!")
-        return instance.delete()
 
 
 class MyProjectsAPI(ListAPIView):
@@ -47,10 +39,10 @@ class MyProjectsAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Project.objects.filter(Q(owner=user) | Q(users__in=[user])).order_by('position')
+        return Project.objects.filter(Q(owner=user) | Q(users__in=[user]))
 
 
-class AddToProject(RetrieveAPIView):
+class JoinToProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
     queryset = Project.objects.all()
@@ -59,10 +51,26 @@ class AddToProject(RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         project = self.get_object()
         if project.owner != request.user:
-            project.user.add(request.user)
+            project.users.add(request.user)
             return self.retrieve(request, *args, **kwargs)
         else:
             raise ValidationError("You can't join to your own project!")
+
+
+class LeaveProject(RetrieveAPIView):
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    queryset = Project.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        project = self.get_object()
+        if project.owner != request.user:
+            project.users.remove(request.user)
+            serializer = self.get_serializer(project)
+            return Response(serializer.data)
+
+        else:
+            raise ValidationError("You can't leave to your own project!")
 
 
 class ChangeInviteSlugProject(RetrieveAPIView):
@@ -142,11 +150,11 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
 class SectionsAPI(ListAPIView):
     serializer_class = SectionSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['title', 'project', 'position', 'archive', ]
+    filterset_fields = ['title', 'project', 'archive', ]
 
     def get_queryset(self):
         user = self.request.user
-        sections = Section.objects.filter(Q(project__owner=user) | Q(project__users__in=[user])).order_by('position')
+        sections = Section.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
         return sections
 
 
@@ -192,7 +200,7 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
 class TasksAPI(ListAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['title', 'assignee', 'section', 'task', 'description', 'color', 'label', 'priority', 'position',
+    filterset_fields = ['title', 'assignee', 'section', 'task', 'description', 'color', 'label', 'priority',
                         'completed', 'created', 'schedule', 'completedDate', ]
 
     def get_queryset(self):

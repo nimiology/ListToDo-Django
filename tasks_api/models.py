@@ -40,25 +40,21 @@ class Project(models.Model):
     background = models.ImageField(upload_to=upload_file, blank=True, null=True)
     view = models.CharField(max_length=1, default='L', choices=VIEWS_CHOICES)
     archive = models.BooleanField(default=False)
-    position = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.owner.username} - {self.title}'
 
-    class Meta:
-        unique_together = [['owner', 'position']]
-
 
 class Section(models.Model):
     title = models.CharField(max_length=512)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name='sections')
-    position = models.PositiveIntegerField(default=0)
     archive = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.project} - {self.title}'
+
 
 
 class Task(models.Model):
@@ -90,7 +86,6 @@ class Task(models.Model):
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, blank=True, null=True)
-    position = models.PositiveIntegerField(default=0)
     completed = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
@@ -138,7 +133,7 @@ class Activity(models.Model):
 
 def user_post_save(sender, instance, *args, **kwargs):
     if kwargs['created']:
-        Project(title='inbox', owner=instance, position=0).save()
+        Project(title='inbox', owner=instance).save()
 
 
 def project_post_save(sender, instance, *args, **kwargs):
@@ -153,4 +148,3 @@ post_save.connect(project_post_save, Project)
 pre_save.connect(section_pre_save, Section)
 pre_save.connect(task_pre_save, Task)
 post_save.connect(user_post_save, User)
-

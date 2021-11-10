@@ -1,17 +1,16 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, AddToProject, ColorsAPI, \
-    CreateSectionAPI, \
-    SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
-    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI
+from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, ColorsAPI, \
+    CreateSectionAPI,SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
+    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject
 
 urlpatterns = [
     path('project/', ProjectsAPI.as_view()),
     path('project/<int:pk>/', ProjectsAPI.as_view()),
     path('project/<int:pk>/inviteslug/', ChangeInviteSlugProject.as_view()),
     path('projects/', MyProjectsAPI.as_view()),
-    path('project/invite/<inviteSlug>/', AddToProject.as_view()),
+    path('project/invite/<inviteSlug>/', JoinToProject.as_view()),
+    path('project/<int:pk>/leave/', LeaveProject.as_view()),
 
     path('label/', LabelAPI.as_view()),
     path('label/<int:pk>/', LabelAPI.as_view()),
