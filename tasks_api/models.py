@@ -40,7 +40,7 @@ class Project(models.Model):
     background = models.ImageField(upload_to=upload_file, blank=True, null=True)
     view = models.CharField(max_length=1, default='L', choices=VIEWS_CHOICES)
     archive = models.BooleanField(default=False)
-    position = models.IntegerField(default=1)
+    position = models.IntegerField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
 
@@ -149,8 +149,8 @@ def project_post_save(sender, instance, *args, **kwargs):
 
 m2m_changed.connect(label_project_m2m_changed, Project.label.through)
 pre_save.connect(project_pre_save, Project)
+post_save.connect(project_post_save, Project)
 pre_save.connect(section_pre_save, Section)
 pre_save.connect(task_pre_save, Task)
 post_save.connect(user_post_save, User)
-post_save.connect(project_post_save, Project)
 

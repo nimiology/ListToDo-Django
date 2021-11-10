@@ -8,10 +8,10 @@ from tasks_api.utils import slug_genrator
 def project_pre_save(sender, instance, *args, **kwargs):
     if instance.inviteSlug == '':
         instance.inviteSlug = slug_genrator()
-
-    if not instance.position:
+    if instance.position is None:
         qs = sender.objects.filter(owner=instance.owner).order_by('-position')
         instance.position = qs[0].position + 1
+        print(qs[0].position)
 
     if instance.project:
         if instance.project.owner != instance.owner:

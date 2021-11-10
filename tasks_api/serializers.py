@@ -27,6 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
+        extra_kwargs = {'position': {'required': False}}
         read_only_fields = ('inviteSlug',)
 
     def to_representation(self, instance):
