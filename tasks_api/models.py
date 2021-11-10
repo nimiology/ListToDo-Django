@@ -141,9 +141,16 @@ def user_post_save(sender, instance, *args, **kwargs):
         Project(title='inbox', owner=instance, position=0).save()
 
 
+def project_post_save(sender, instance, *args, **kwargs):
+    if kwargs['created']:
+        if instance.view == 'L':
+            Section(title='inbox', project=instance).save()
+
+
 m2m_changed.connect(label_project_m2m_changed, Project.label.through)
 pre_save.connect(project_pre_save, Project)
 pre_save.connect(section_pre_save, Section)
 pre_save.connect(task_pre_save, Task)
 post_save.connect(user_post_save, User)
+post_save.connect(project_post_save, Project)
 

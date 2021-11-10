@@ -26,6 +26,10 @@ def section_pre_save(sender, instance, *args, **kwargs):
         else:
             instance.position = 1
 
+    if instance.project.view == 'L':
+        if len(instance.project.sections.all()) == 1:
+            raise ValidationError("You can't create 2 section in this project!")
+
 
 def task_pre_save(sender, instance, *args, **kwargs):
     if instance.completed:
