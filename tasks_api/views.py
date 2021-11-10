@@ -20,6 +20,8 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         obj = serializer.save(owner=user)
+        if serializer.validated_data.get('position') == 0:
+            raise ValidationError("Position should be equal or more than 1!")
         Activity(assignee=user, project=obj, status='C').save()
         return obj
 
@@ -27,8 +29,15 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
         user = self.request.user
         project = self.get_object()
         obj = serializer.save(owner=project.owner)
+        if serializer.validated_data.get('position') == 0:
+            raise ValidationError("Position should be equal or more than 1!")
         Activity(assignee=user, project=obj, status='U').save()
         return obj
+
+    def perform_destroy(self, instance):
+        if instance.position == 0:
+            raise ValidationError("You can't delete this project!")
+        return instance.delete()
 
 
 class MyProjectsAPI(ListAPIView):

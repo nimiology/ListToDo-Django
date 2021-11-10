@@ -10,16 +10,17 @@ def project_pre_save(sender, instance, *args, **kwargs):
         instance.inviteSlug = slug_genrator()
 
     if not instance.position:
-        qs = sender.objects.filter(owner=instance.owner).order_by('-id')
-        if qs.exists():
-            instance.position = qs[0].position + 1
-        else:
-            instance.position = 1
+        qs = sender.objects.filter(owner=instance.owner).order_by('-position')
+        instance.position = qs[0].position + 1
+
+    if instance.project:
+        if instance.project.owner != instance.owner:
+            raise ValidationError("That's not your project!")
 
 
 def section_pre_save(sender, instance, *args, **kwargs):
     if not instance.position:
-        qs = sender.objects.filter(project=instance.project).order_by('-id')
+        qs = sender.objects.filter(project=instance.project).order_by('-position')
         if qs.exists():
             instance.position = qs[0].position + 1
         else:
@@ -68,7 +69,7 @@ def task_pre_save(sender, instance, *args, **kwargs):
         instance.completedDate = None
 
     if not instance.position:
-        qs = sender.objects.filter(section=instance.section).order_by('-id')
+        qs = sender.objects.filter(section=instance.section).order_by('-position')
         if qs.exists():
             instance.position = qs[0].position + 1
         else:
@@ -80,6 +81,4 @@ def label_project_m2m_changed(sender, instance, *args, **kwargs):
         for label in instance.label.all():
             if label.owner != instance.owner:
                 raise ValidationError('Invalid Label')
-
-
 

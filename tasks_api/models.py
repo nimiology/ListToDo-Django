@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import m2m_changed, pre_save
+from django.db.models.signals import m2m_changed, pre_save, post_save
 
 from tasks_api.signals import label_project_m2m_changed, project_pre_save, section_pre_save, task_pre_save
 from tasks_api.utils import upload_file
@@ -40,7 +40,7 @@ class Project(models.Model):
     background = models.ImageField(upload_to=upload_file, blank=True, null=True)
     view = models.CharField(max_length=1, default='L', choices=VIEWS_CHOICES)
     archive = models.BooleanField(default=False)
-    position = models.PositiveIntegerField(default=0)
+    position = models.IntegerField(default=1)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
 
@@ -137,7 +137,14 @@ class Activity(models.Model):
         return f'{self.project} - {self.pk}'
 
 
+def user_post_save(sender, instance, *args, **kwargs):
+    if kwargs['created']:
+        Project(title='inbox', owner=instance, position=0).save()
+
+
 m2m_changed.connect(label_project_m2m_changed, Project.label.through)
 pre_save.connect(project_pre_save, Project)
 pre_save.connect(section_pre_save, Section)
 pre_save.connect(task_pre_save, Task)
+post_save.connect(user_post_save, User)
+
