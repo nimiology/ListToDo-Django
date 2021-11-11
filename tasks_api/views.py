@@ -1,16 +1,17 @@
 from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
+    UpdateAPIView
 from rest_framework.response import Response
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
+from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, Position
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
     IsItOwnerOrUsersProjectWithOBJ, IsItOwnerOrUsersProjectWithSection
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
-    TaskSerializer, CommentSerializer, ActivitySerializer
+    TaskSerializer, CommentSerializer, ActivitySerializer, PositionSerializer, ChangePositionSerializer
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
-    slug_genrator
+    slug_genrator, check_position
 
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
@@ -266,3 +267,16 @@ class ActivityAPI(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return Activity.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+
+
+class PositionCreateAPI(CreateAPIView):
+    serializer_class = PositionSerializer
+    queryset = Position.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        check_position(serializer, user)
+        return serializer.save(owner=user)
+
+

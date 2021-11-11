@@ -56,7 +56,6 @@ class Section(models.Model):
         return f'{self.project} - {self.title}'
 
 
-
 class Task(models.Model):
     related_name = 'tasks'
     PRIORITY_CHOICES = (
@@ -94,6 +93,21 @@ class Task(models.Model):
 
     def __str__(self):
         return f'{self.owner.username} - {self.title}'
+
+
+class Position(models.Model):
+    relatedName = 'positions'
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name=relatedName)
+    project = models.ForeignKey(Project, blank=True, null=True, on_delete=models.CASCADE, related_name=relatedName)
+    section = models.ForeignKey(Section, blank=True, null=True, on_delete=models.CASCADE, related_name=relatedName)
+    task = models.ForeignKey(Task, blank=True, null=True, on_delete=models.CASCADE, related_name=relatedName)
+    position = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = [['owner', 'project'],
+                           ['owner', 'section'],
+                           ['owner', 'task']]
 
 
 class Comment(models.Model):

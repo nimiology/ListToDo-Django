@@ -1,8 +1,8 @@
 from django.urls import path
 
 from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, ColorsAPI, \
-    CreateSectionAPI,SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
-    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject
+    CreateSectionAPI, SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
+    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, PositionCreateAPI
 
 urlpatterns = [
     path('project/', ProjectsAPI.as_view()),
@@ -32,4 +32,5 @@ urlpatterns = [
 
     path('activity/', ActivityAPI.as_view()),
 
+    path('position/', PositionCreateAPI.as_view()),
 ]
