@@ -3,38 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ReadOnlyField
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, Position
-
-
-class PositionSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
-
-    class Meta:
-        model = Position
-        fields = '__all__'
-        extra_kwargs = {
-            'project': {'required': False},
-            'section': {'required': False},
-            'task': {'required': False}
-        }
-
-    def validate(self, attrs):
-        project = attrs.get('project')
-        section = attrs.get('section')
-        task = attrs.get('task')
-        if (task and not project and not section) or \
-                (project and not task and not section) or \
-                (section and not project and not task):
-            return attrs
-
-        else:
-            raise serializers.ValidationError('You can only submit just on a foreignkey')
-
-    def to_representation(self, instance):
-        self.fields['project'] = ProjectSerializer(read_only=True)
-        self.fields['section'] = SectionSerializer(read_only=True)
-        self.fields['task'] = TaskSerializer(read_only=True)
-        return super(PositionSerializer, self).to_representation(instance)
+from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
 
 
 class ColorSerializer(serializers.ModelSerializer):
@@ -132,12 +101,3 @@ class ActivitySerializer(serializers.ModelSerializer):
         return super(ActivitySerializer, self).to_representation(instance)
 
 
-class ChangePositionSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
-    project = ProjectSerializer(read_only=True)
-    section = SectionSerializer(read_only=True)
-    task = TaskSerializer(read_only=True)
-
-    class Meta:
-        model = Position
-        fields = '__all__'

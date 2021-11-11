@@ -57,17 +57,3 @@ def check_task_in_project(serializer, project):
         if task.project != project:
             raise ValidationError("The task is not in the project!")
 
-
-def check_position(serializer, user):
-    project = serializer.validated_data.get('project')
-    task = serializer.validated_data.get('task')
-    section = serializer.validated_data.get('section')
-    if project:
-        if not (project.owner == user or user in project.users.all()):
-            raise AuthenticationFailed
-    elif task:
-        if task.section.project == user or user in task.section.project.users.all():
-            raise AuthenticationFailed
-    elif section:
-        if section.project == user or user in section.project.users.all():
-            raise AuthenticationFailed
