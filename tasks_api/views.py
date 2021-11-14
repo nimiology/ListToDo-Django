@@ -206,7 +206,7 @@ class TasksAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        tasks = Task.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+        tasks = Task.objects.filter(Q(section__project__owner=user) | Q(section__project__users__in=[user]))
         return tasks
 
 
