@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import m2m_changed, pre_save, post_save
 
-from tasks_api.signals import label_project_m2m_changed, project_pre_save, section_pre_save, task_pre_save
+from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save
 from tasks_api.utils import upload_file
 
 
@@ -136,6 +136,5 @@ def user_post_save(sender, instance, *args, **kwargs):
 
 m2m_changed.connect(label_project_m2m_changed, Project.label.through)
 pre_save.connect(project_pre_save, Project)
-pre_save.connect(section_pre_save, Section)
 pre_save.connect(task_pre_save, Task)
 post_save.connect(user_post_save, User)

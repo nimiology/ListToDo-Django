@@ -33,8 +33,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
-        self.fields['position'] = PositionSerializer(read_only=True, many=True)
-
         return super(ProjectSerializer, self).to_representation(instance)
 
 
@@ -45,7 +43,6 @@ class SectionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.fields['project'] = ProjectSerializer(read_only=True)
-        self.fields['position'] = PositionSerializer(read_only=True, many=True)
         return super(SectionSerializer, self).to_representation(instance)
 
 
@@ -62,7 +59,6 @@ class TaskSerializer(serializers.ModelSerializer):
         self.fields['task'] = ReadOnlyField(source='task.title')
         self.fields['color'] = ColorSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True)
-        self.fields['position'] = PositionSerializer(read_only=True, many=True)
         return super(TaskSerializer, self).to_representation(instance)
 
 
