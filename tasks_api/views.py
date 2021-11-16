@@ -5,11 +5,11 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView,
     UpdateAPIView
 from rest_framework.response import Response
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity
+from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, ProjectUser
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
-    IsItOwnerOrUsersProjectWithOBJ, IsItOwnerOrUsersProjectWithSection
+    IsItOwnerOrUsersProjectWithOBJ
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
-    TaskSerializer, CommentSerializer, ActivitySerializer
+    TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
     slug_genrator
 
@@ -40,7 +40,7 @@ class MyProjectsAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Project.objects.filter(Q(owner=user) | Q(users__in=[user]))
+        return Project.objects.filter(users__in=user.projects.all())
 
 
 class JoinToProject(RetrieveAPIView):
@@ -51,9 +51,14 @@ class JoinToProject(RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         project = self.get_object()
-        if project.owner != request.user:
-            project.users.add(request.user)
-            return self.retrieve(request, *args, **kwargs)
+        user = request.user
+        if project.owner != user:
+            try:
+                print(ProjectUser.objects.get(project=project, owner=user))
+                raise ValidationError("You've already joined this project!")
+            except ProjectUser.DoesNotExist:
+                ProjectUser(owner=user, project=project).save()
+                return self.retrieve(request, *args, **kwargs)
         else:
             raise ValidationError("You can't join to your own project!")
 
@@ -155,14 +160,14 @@ class SectionsAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        sections = Section.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+        sections = Section.objects.filter(project__users__in=user.projects.all())
         return sections
 
 
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithSection]
+    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -206,7 +211,7 @@ class TasksAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        tasks = Task.objects.filter(Q(section__project__owner=user) | Q(section__project__users__in=[user]))
+        tasks = Task.objects.filter(section__project__users__in=user.projects.all())
         return tasks
 
 
@@ -255,7 +260,7 @@ class CommentsAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        comments = Comment.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+        comments = Comment.objects.filter(project__users__in=user.projects.all())
         return comments
 
 
@@ -266,6 +271,6 @@ class ActivityAPI(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Activity.objects.filter(Q(project__owner=user) | Q(project__users__in=[user]))
+        return Activity.objects.filter(project__users__in=user.projects.all())
 
 

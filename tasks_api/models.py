@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import m2m_changed, pre_save, post_save
 
-from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save
+from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save
 from tasks_api.utils import upload_file
 
 
@@ -45,13 +45,16 @@ class Project(models.Model):
         return f'{self.owner.username} - {self.title}'
 
 
-class ProjectUsers(models.Model):
+class ProjectUser(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='assignees')
-    position = models.IntegerField()
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='users')
+    position = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.owner} - {self.project}'
+
+    class Meta:
+        unique_together = [['owner', 'project'], ['owner', 'position']]
 
 
 class Section(models.Model):
@@ -137,12 +140,19 @@ class Activity(models.Model):
         return f'{self.project} - {self.pk}'
 
 
-def user_post_save(sender, instance, *args, **kwargs):
-    if kwargs['created']:
+def user_post_save(sender, instance, created, *args, **kwargs):
+    if created:
         Project(title='inbox', owner=instance).save()
+
+
+def project_post_save(sender, instance, created, *args, **kwargs):
+    if created:
+        ProjectUser(owner=instance.owner, project=instance).save()
 
 
 m2m_changed.connect(label_project_m2m_changed, Project.label.through)
 pre_save.connect(project_pre_save, Project)
+pre_save.connect(project_users_pre_save, ProjectUser)
 pre_save.connect(task_pre_save, Task)
 post_save.connect(user_post_save, User)
+post_save.connect(project_post_save, Project)
