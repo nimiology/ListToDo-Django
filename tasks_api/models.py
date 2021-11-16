@@ -32,7 +32,6 @@ class Project(models.Model):
     ]
     title = models.CharField(max_length=512)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
-    users = models.ManyToManyField(User, blank=True, related_name=related_name)
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
     inviteSlug = models.SlugField(blank=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
@@ -45,6 +44,15 @@ class Project(models.Model):
 
     def __str__(self):
         return f'{self.owner.username} - {self.title}'
+
+
+class ProjectUsers(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='assignees')
+    position = models.IntegerField()
+
+    def __str__(self):
+        return f'{self.owner} - {self.project}'
 
 
 class Section(models.Model):
