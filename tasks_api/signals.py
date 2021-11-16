@@ -14,6 +14,16 @@ def project_pre_save(sender, instance, *args, **kwargs):
             raise ValidationError("That's not your project!")
 
 
+def section_pre_save(sender, instance, *args, **kwargs):
+    if instance.position is None:
+        project_sections = sender.objects.filter(project=instance.project).order_by('-position')
+        if project_sections.exists():
+            project_section = project_sections[0]
+            instance.position = project_section.position + 1
+        else:
+            instance.position = 0
+
+
 def project_users_pre_save(sender, instance, *args, **kwargs):
     if instance.position is None:
         projects_user = sender.objects.filter(owner=instance.owner).order_by('-position')
@@ -21,10 +31,17 @@ def project_users_pre_save(sender, instance, *args, **kwargs):
             project_user = projects_user[0]
             instance.position = project_user.position + 1
         else:
-            instance.position = -1
+            instance.position = 0
 
 
 def task_pre_save(sender, instance, *args, **kwargs):
+    if instance.position is None:
+        tasks = sender.objects.filter(section=instance.section).order_by('-position')
+        if tasks.exists():
+            last_task = tasks[0]
+            instance.position = last_task.position + 1
+        else:
+            instance.position = -1
     if instance.completed:
         instance.completedDate = datetime.datetime.now()
         every = instance.every

@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import m2m_changed, pre_save, post_save
 
-from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save
+from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save, \
+    section_pre_save
 from tasks_api.utils import upload_file
 
 
@@ -60,10 +61,14 @@ class ProjectUser(models.Model):
 class Section(models.Model):
     title = models.CharField(max_length=512)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name='sections')
+    position = models.IntegerField(blank=True, null=True)
     archive = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.project} - {self.title}'
+
+    class Meta:
+        unique_together = ['project', 'position']
 
 
 class Task(models.Model):
@@ -95,6 +100,7 @@ class Task(models.Model):
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, blank=True, null=True)
+    position = models.IntegerField(blank=True, null=True)
     completed = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
@@ -103,6 +109,9 @@ class Task(models.Model):
 
     def __str__(self):
         return f'{self.owner.username} - {self.title}'
+
+    class Meta:
+        unique_together = ['section', 'position']
 
 
 class Comment(models.Model):
@@ -154,5 +163,6 @@ m2m_changed.connect(label_project_m2m_changed, Project.label.through)
 pre_save.connect(project_pre_save, Project)
 pre_save.connect(project_users_pre_save, ProjectUser)
 pre_save.connect(task_pre_save, Task)
+pre_save.connect(section_pre_save, Section)
 post_save.connect(user_post_save, User)
 post_save.connect(project_post_save, Project)
