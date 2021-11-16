@@ -14,12 +14,6 @@ def project_pre_save(sender, instance, *args, **kwargs):
             raise ValidationError("That's not your project!")
 
 
-def section_pre_save(sender, instance, *args, **kwargs):
-    if instance.project.view == 'L':
-        if len(instance.project.sections.all()) == 1:
-            raise ValidationError("You can't create 2 section in this project!")
-
-
 def task_pre_save(sender, instance, *args, **kwargs):
     if instance.completed:
         instance.completedDate = datetime.datetime.now()
