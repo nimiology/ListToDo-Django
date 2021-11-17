@@ -35,7 +35,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
-        extra_fields = ['position']
         read_only_fields = ('inviteSlug',)
 
     def to_representation(self, instance):
@@ -45,13 +44,12 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
+    project = ProjectSerializer(read_only=True, required=False)
+
     class Meta:
         model = Section
         fields = '__all__'
-
-    def to_representation(self, instance):
-        self.fields['project'] = ProjectSerializer(read_only=True)
-        return super(SectionSerializer, self).to_representation(instance)
+        extra_kwargs = {'position': {'required': False}}
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -61,12 +59,13 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
+        extra_kwargs = {'position': {'required': False}}
 
     def to_representation(self, instance):
         self.fields['assignee'] = UserSerializer(read_only=True)
         self.fields['task'] = ReadOnlyField(source='task.title')
         self.fields['color'] = ColorSerializer(read_only=True)
-        self.fields['label'] = LabelSerializer(read_only=True)
+        self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(TaskSerializer, self).to_representation(instance)
 
 
@@ -116,5 +115,15 @@ class ProjectUsersSerializer4JoinProject(serializers.ModelSerializer):
 
 
 class ChangeProjectPositionSerializer(serializers.Serializer):
-    project1 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
-    project2 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
+    obj1 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
+    obj2 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
+
+
+class ChangeSectionPositionSerializer(serializers.Serializer):
+    obj1 = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all())
+    obj2 = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all())
+
+
+class ChangeTaskPositionSerializer(serializers.Serializer):
+    obj1 = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all())
+    obj2 = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all())

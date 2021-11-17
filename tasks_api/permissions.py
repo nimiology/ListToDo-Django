@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission
 
+from tasks_api.models import ProjectUser
+
 
 class IsOwnerOrCreatOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -13,15 +15,35 @@ class IsOwner(BasePermission):
 
 class IsInProjectOrCreatOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return ((request.user == obj.owner or request.user in obj.users.all())
-                and request.user.is_authenticated) or request.method == 'POST'
+        try:
+            obj.users.get(owner=request.user)
+            return True
+        except ProjectUser.DoesNotExist:
+            return request.method == 'POST'
 
 
 class IsItUsersProjectWithProject(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return obj in request.user.projects.all()
+        try:
+            obj.users.get(owner=request.user)
+            return True
+        except ProjectUser.DoesNotExist:
+            return False
 
 
-class IsItUsersProjectWithOBJ(BasePermission):
+class IsItUsersProjectWithSection(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return obj.project in request.user.projects.all()
+        try:
+            obj.project.users.get(owner=request.user)
+            return True
+        except ProjectUser.DoesNotExist:
+            return False
+
+
+class IsItUsersProjectWithTask(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        try:
+            obj.section.project.users.get(owner=request.user)
+            return True
+        except ProjectUser.DoesNotExist:
+            return False

@@ -1,16 +1,17 @@
 from django.db.models import Q
-from rest_framework.exceptions import ValidationError, MethodNotAllowed
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    UpdateAPIView, GenericAPIView
+     GenericAPIView
 from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, ProjectUser
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithProject, \
-    IsItUsersProjectWithOBJ, IsOwner
+    IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
-    ChangeProjectPositionSerializer
+    ChangeProjectPositionSerializer, ProjectUsersSerializer, ChangeSectionPositionSerializer, \
+    ChangeTaskPositionSerializer
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
     slug_genrator
 
@@ -35,13 +36,16 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
 
 
 class MyProjectsAPI(ListAPIView):
-    serializer_class = ProjectSerializer
+    serializer_class = ProjectUsersSerializer4JoinProject
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['title', 'project', 'color', 'label', 'archive', 'created', 'schedule', ]
+    filterset_fields = ['project__title', 'project__project',
+                        'project__color', 'project__label',
+                        'project__archive', 'project__created',
+                        'project__schedule', ]
 
     def get_queryset(self):
         user = self.request.user
-        return Project.objects.filter(users__in=user.projects.all())
+        return ProjectUser.objects.filter(owner=user).order_by('position')
 
 
 class JoinToProject(RetrieveAPIView):
@@ -135,7 +139,7 @@ class CreateSectionAPI(CreateAPIView):
 class SectionAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SectionSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithSection]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -168,7 +172,7 @@ class SectionsAPI(ListAPIView):
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithSection]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -184,7 +188,7 @@ class CreateTaskAPI(CreateAPIView):
 class TaskAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithTask]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -234,7 +238,7 @@ class CreateCommentAPI(CreateAPIView):
 class CommentAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithSection]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -276,27 +280,39 @@ class ActivityAPI(ListAPIView):
 
 
 class ChangeProjectsPositionsAPI(GenericAPIView):
-    serializer_class = ChangeProjectPositionSerializer
-    permission_classes = [IsAuthenticated & IsOwner]
-    queryset = ProjectUser.objects.all()
-
     def post(self, request, *args, **kwargs):
+        request_to_model = request.GET.get('type')
+        if request_to_model == 'project':
+            self.serializer_class = ChangeProjectPositionSerializer
+            self.permission_classes = [IsAuthenticated & IsOwner]
+        elif request_to_model == 'section':
+            self.serializer_class = ChangeSectionPositionSerializer
+            self.permission_classes = [IsAuthenticated & IsItUsersProjectWithSection]
+        elif request_to_model == 'task':
+            self.serializer_class = ChangeTaskPositionSerializer
+            self.permission_classes = [IsAuthenticated & IsItUsersProjectWithTask]
+        else:
+            raise ValidationError('The type params must be wrong!')
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        project1 = serializer.validated_data.get('project1')
-        project2 = serializer.validated_data.get('project2')
-        self.check_object_permissions(request=self.request, obj=project1)
-        self.check_object_permissions(request=self.request, obj=project2)
-        projects_user = ProjectUser.objects.filter(owner=project1.owner).order_by('-position')
-        project_user_last = projects_user[0]
-        position1 = project2.position
-        position2 = project1.position
-        project2.position = project_user_last.position + 1
-        project2.save()
-        project1.position = position1
-        project1.save()
-        project2.position = position2
-        project2.save()
-        serializer = ProjectSerializer(project1.project)
+        obj1 = serializer.validated_data.get('obj1')
+        obj2 = serializer.validated_data.get('obj2')
+        self.check_object_permissions(request=self.request, obj=obj1)
+        self.check_object_permissions(request=self.request, obj=obj2)
+        position1 = obj2.position
+        position2 = obj1.position
+        obj2.position = None
+        obj2.save()
+        obj1.position = position1
+        obj1.save()
+        obj2.position = position2
+        obj2.save()
+        if request_to_model == 'project':
+            serializer = ProjectSerializer(obj1)
+        elif request_to_model == 'section':
+            serializer = SectionSerializer(obj1)
+        elif request_to_model == 'task':
+            serializer = TaskSerializer(obj1)
+        else:
+            raise ValidationError('The type params must be wrong!')
         return Response(serializer.data)
-

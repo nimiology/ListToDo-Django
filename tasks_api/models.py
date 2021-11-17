@@ -69,6 +69,7 @@ class Section(models.Model):
 
     class Meta:
         unique_together = ['project', 'position']
+        ordering = ['position']
 
 
 class Task(models.Model):
@@ -112,6 +113,7 @@ class Task(models.Model):
 
     class Meta:
         unique_together = ['section', 'position']
+        ordering = ['position']
 
 
 class Comment(models.Model):
