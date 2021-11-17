@@ -1,15 +1,16 @@
 from django.db.models import Q
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    UpdateAPIView
+    UpdateAPIView, GenericAPIView
 from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, ProjectUser
-from tasks_api.permissions import IsInProjectOrCreatOnly, IsItOwnerOrUsersProjectWithProject, \
-    IsItOwnerOrUsersProjectWithOBJ
+from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithProject, \
+    IsItUsersProjectWithOBJ, IsOwner
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
-    TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject
+    TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
+    ChangeProjectPositionSerializer
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
     slug_genrator
 
@@ -65,7 +66,7 @@ class JoinToProject(RetrieveAPIView):
 
 class LeaveProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
     queryset = Project.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -81,7 +82,7 @@ class LeaveProject(RetrieveAPIView):
 
 class ChangeInviteSlugProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
     queryset = Project.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -120,7 +121,7 @@ class ColorsAPI(ListAPIView):
 class CreateSectionAPI(CreateAPIView):
     serializer_class = SectionSerializer
     queryset = Project.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -134,7 +135,7 @@ class CreateSectionAPI(CreateAPIView):
 class SectionAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SectionSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -167,7 +168,7 @@ class SectionsAPI(ListAPIView):
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -183,7 +184,7 @@ class CreateTaskAPI(CreateAPIView):
 class TaskAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -218,7 +219,7 @@ class TasksAPI(ListAPIView):
 class CreateCommentAPI(CreateAPIView):
     serializer_class = CommentSerializer
     queryset = Project.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithProject]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -233,7 +234,7 @@ class CreateCommentAPI(CreateAPIView):
 class CommentAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
-    permission_classes = [IsAuthenticated, IsItOwnerOrUsersProjectWithOBJ]
+    permission_classes = [IsAuthenticated, IsItUsersProjectWithOBJ]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -273,4 +274,29 @@ class ActivityAPI(ListAPIView):
         user = self.request.user
         return Activity.objects.filter(project__users__in=user.projects.all())
 
+
+class ChangeProjectsPositionsAPI(GenericAPIView):
+    serializer_class = ChangeProjectPositionSerializer
+    permission_classes = [IsAuthenticated & IsOwner]
+    queryset = ProjectUser.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        project1 = serializer.validated_data.get('project1')
+        project2 = serializer.validated_data.get('project2')
+        self.check_object_permissions(request=self.request, obj=project1)
+        self.check_object_permissions(request=self.request, obj=project2)
+        projects_user = ProjectUser.objects.filter(owner=project1.owner).order_by('-position')
+        project_user_last = projects_user[0]
+        position1 = project2.position
+        position2 = project1.position
+        project2.position = project_user_last.position + 1
+        project2.save()
+        project1.position = position1
+        project1.save()
+        project2.position = position2
+        project2.save()
+        serializer = ProjectSerializer(project1.project)
+        return Response(serializer.data)
 

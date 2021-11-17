@@ -98,7 +98,7 @@ class Task(models.Model):
     title = models.CharField(max_length=512)
     description = models.TextField(null=True, blank=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
-    label = models.ForeignKey(Label, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
+    label = models.ManyToManyField(Label, blank=True, related_name=related_name)
     priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, blank=True, null=True)
     position = models.IntegerField(blank=True, null=True)
     completed = models.BooleanField(default=False)

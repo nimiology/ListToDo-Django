@@ -113,3 +113,8 @@ class ProjectUsersSerializer4JoinProject(serializers.ModelSerializer):
         model = ProjectUser
         fields = '__all__'
         extra_kwargs = {'position': {'required': False}}
+
+
+class ChangeProjectPositionSerializer(serializers.Serializer):
+    project1 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
+    project2 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())

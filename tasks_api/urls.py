@@ -2,7 +2,8 @@ from django.urls import path
 
 from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, ColorsAPI, \
     CreateSectionAPI, SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
-    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject
+    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
+    ChangeProjectsPositionsAPI
 
 urlpatterns = [
     path('project/', ProjectsAPI.as_view()),
@@ -31,5 +32,7 @@ urlpatterns = [
     path('comment/<int:pk>/', CommentAPI.as_view()),
 
     path('activity/', ActivityAPI.as_view()),
+
+    path('changeposition/', ChangeProjectsPositionsAPI.as_view()),
 
 ]
