@@ -31,7 +31,7 @@ def project_users_pre_save(sender, instance, *args, **kwargs):
             project_user = projects_user[0]
             instance.position = project_user.position + 1
         else:
-            instance.position = 0
+            instance.position = -1
 
 
 def task_pre_save(sender, instance, *args, **kwargs):
@@ -41,7 +41,7 @@ def task_pre_save(sender, instance, *args, **kwargs):
             last_task = tasks[0]
             instance.position = last_task.position + 1
         else:
-            instance.position = -1
+            instance.position = 0
     if instance.completed:
         instance.completedDate = datetime.datetime.now()
         every = instance.every
