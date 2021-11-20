@@ -6,7 +6,7 @@ from tasks_api.utils import slug_genrator
 
 
 def project_pre_save(sender, instance, *args, **kwargs):
-    if instance.inviteSlug == '':
+    if not instance.inviteSlug:
         instance.inviteSlug = slug_genrator()
 
     if instance.project:
