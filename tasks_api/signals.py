@@ -13,6 +13,10 @@ def project_pre_save(sender, instance, *args, **kwargs):
         if instance.project.owner != instance.owner:
             raise ValidationError("That's not your project!")
 
+    if instance.team:
+        if not instance.team.owner == instance.owner and not instance.owner in instance.team.users.all():
+            raise ValidationError("You're not in the team!")
+
 
 def section_pre_save(sender, instance, *args, **kwargs):
     if instance.position is None:

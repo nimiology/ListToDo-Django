@@ -1,8 +1,7 @@
-from django.db.models import Q
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-     GenericAPIView
+    GenericAPIView
 from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, ProjectUser
@@ -10,8 +9,8 @@ from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithPr
     IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
-    ChangeProjectPositionSerializer, ProjectUsersSerializer, ChangeSectionPositionSerializer, \
-    ChangeTaskPositionSerializer
+    ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer
+
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
     slug_genrator
 
@@ -55,11 +54,14 @@ class JoinToProject(RetrieveAPIView):
     lookup_field = 'inviteSlug'
 
     def get(self, request, *args, **kwargs):
+        raise MethodNotAllowed('GET')
+
+    def post(self, request, *args, **kwargs):
         project = self.get_object()
         user = request.user
         if project.owner != user:
             try:
-                print(ProjectUser.objects.get(project=project, owner=user))
+                ProjectUser.objects.get(project=project, owner=user)
                 raise ValidationError("You've already joined this project!")
             except ProjectUser.DoesNotExist:
                 ProjectUser(owner=user, project=project).save()
@@ -74,6 +76,9 @@ class LeaveProject(RetrieveAPIView):
     queryset = Project.objects.all()
 
     def get(self, request, *args, **kwargs):
+        raise MethodNotAllowed('GET')
+
+    def post(self, request, *args, **kwargs):
         project = self.get_object()
         if project.owner != request.user:
             project.users.remove(request.user)

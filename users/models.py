@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, m2m_changed
 
 from tasks_api.utils import upload_file
 from users.signals import team_pre_save
@@ -8,8 +8,8 @@ from users.signals import team_pre_save
 
 class Team(models.Model):
     name = models.CharField(max_length=250)
-    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teams_owner')
-    users = models.ManyToManyField(User, related_name='teams')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='teams_owner')
+    users = models.ManyToManyField(User, blank=True, related_name='teams')
     profile = models.ImageField(upload_to=upload_file, blank=True)
     inviteSlug = models.SlugField(blank=True, null=True)
 

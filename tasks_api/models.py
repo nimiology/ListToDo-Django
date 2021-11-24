@@ -35,7 +35,7 @@ class Project(models.Model):
     title = models.CharField(max_length=512)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects_owner')
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     inviteSlug = models.SlugField(blank=True, null=True)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
     label = models.ManyToManyField(Label, blank=True, related_name=related_name)
@@ -162,12 +162,12 @@ def project_post_save(sender, instance, created, *args, **kwargs):
     if created:
         ProjectUser(owner=instance.owner, project=instance).save()
 
-    if instance.team:
-        if instance.owner != instance.team.owner:
-            ProjectUser(owner=instance.team.owner, project=instance).save()
-        for user in instance.team.users.all():
-            if instance.owner != user:
-                ProjectUser(owner=user, project=instance).save()
+        if instance.team:
+            if instance.owner != instance.team.owner:
+                ProjectUser(owner=instance.team.owner, project=instance).save()
+            for user in instance.team.users.all():
+                if instance.owner != user:
+                    ProjectUser(owner=user, project=instance).save()
 
 
 m2m_changed.connect(label_project_m2m_changed, Project.label.through)

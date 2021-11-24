@@ -1,10 +1,83 @@
-from rest_framework.generics import get_object_or_404
+from django.db.models import Q
+from rest_framework.exceptions import MethodNotAllowed, ValidationError
+from rest_framework.generics import get_object_or_404, RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
+from tasks_api.models import ProjectUser
 from tasks_api.permissions import IsOwnerOrCreatOnly
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView
-from users.models import Setting
-from users.serializer import SettingSerializer
+from tasks_api.views import ChangeInviteSlugProject
+from users.models import Setting, Team
+from users.permissions import IsInTeam, ReadOnly, IsTeamOwner
+from users.serializer import SettingSerializer, TeamSerializer
+
+
+class TeamAPI(CreateRetrieveUpdateDestroyAPIView):
+    queryset = Team.objects.all()
+    permission_classes = [IsOwnerOrCreatOnly | (IsInTeam & ReadOnly),
+                          IsAuthenticated]
+    serializer_class = TeamSerializer
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        return serializer.save(owner=self.request.user)
+
+
+class JoinTeamAPI(RetrieveAPIView):
+    serializer_class = TeamSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Team.objects.all()
+    lookup_field = 'inviteSlug'
+
+    def get(self, request, *args, **kwargs):
+        raise MethodNotAllowed('GET')
+
+    def post(self, request, *args, **kwargs):
+        team = self.get_object()
+        user = request.user
+        if team.owner != user:
+            team.users.add(user)
+            for project in team.projects.all():
+                ProjectUser(owner=user, project=project).save()
+            return self.retrieve(request, *args, **kwargs)
+        else:
+            raise ValidationError("You can't join to your own team!")
+
+
+class LeaveTeamAPI(RetrieveAPIView):
+    serializer_class = TeamSerializer
+    permission_classes = [IsAuthenticated, IsInTeam]
+    queryset = Team.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        raise MethodNotAllowed('GET')
+
+    def post(self, request, *args, **kwargs):
+        team = self.get_object()
+        if team.owner != request.user:
+            team.users.remove(request.user)
+            serializer = self.get_serializer(team)
+            return Response(serializer.data)
+
+        else:
+            raise ValidationError("You can't leave to your own team!")
+
+
+class AllTeamsAPI(ListAPIView):
+    serializer_class = TeamSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Team.objects.filter(Q(owner=self.request.user) | Q(users__in=[self.request.user]))
+
+
+class ChangeInviteSlugTeam(ChangeInviteSlugProject):
+    serializer_class = TeamSerializer
+    permission_classes = [IsAuthenticated, IsTeamOwner]
+    queryset = Team.objects.all()
 
 
 class SettingAPI(CreateRetrieveUpdateDestroyAPIView):
