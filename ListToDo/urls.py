@@ -24,7 +24,5 @@ urlpatterns = [
     path('', include('tasks_api.urls')),
     path('', include('users.urls')),
 ]
-if settings.DEBUG:
-    # add media static files
-    urlpatterns = urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns = urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
