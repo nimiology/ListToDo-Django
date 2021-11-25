@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
-from rest_framework.generics import get_object_or_404, RetrieveAPIView, ListAPIView
+from rest_framework.generics import get_object_or_404, RetrieveAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -80,7 +80,7 @@ class ChangeInviteSlugTeam(ChangeInviteSlugProject):
     queryset = Team.objects.all()
 
 
-class SettingAPI(CreateRetrieveUpdateDestroyAPIView):
+class SettingAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SettingSerializer
     queryset = Setting.objects.all()
     permission_classes = [IsAuthenticated, IsOwnerOrCreatOnly]
@@ -88,9 +88,6 @@ class SettingAPI(CreateRetrieveUpdateDestroyAPIView):
     def get_object(self):
         setting = get_object_or_404(self.get_queryset(), owner=self.request.user)
         return setting
-
-    def perform_create(self, serializer):
-        return serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.request.user)

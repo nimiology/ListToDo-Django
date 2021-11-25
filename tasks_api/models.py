@@ -5,7 +5,7 @@ from django.db.models.signals import m2m_changed, pre_save, post_save
 from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save, \
     section_pre_save
 from tasks_api.utils import upload_file
-from users.models import Team
+from users.models import Team, Setting
 
 
 class Color(models.Model):
@@ -156,6 +156,7 @@ class Activity(models.Model):
 def user_post_save(sender, instance, created, *args, **kwargs):
     if created:
         Project(title='inbox', owner=instance).save()
+        Setting(owner=instance).save()
 
 
 def project_post_save(sender, instance, created, *args, **kwargs):

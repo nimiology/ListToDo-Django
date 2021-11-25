@@ -1,7 +1,9 @@
+import pytz
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save, m2m_changed
 
+from ListToDo import settings
 from tasks_api.utils import upload_file
 from users.signals import team_pre_save
 
@@ -16,7 +18,10 @@ class Team(models.Model):
 
 class Setting(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='setting')
-    setting = models.JSONField()
+    timezone = models.CharField(max_length=3,
+                                choices=[(str(number), pytz.all_timezones[number]) for number in range(1, len(pytz.all_timezones))],
+                                default=str(pytz.all_timezones.index(settings.TIME_ZONE) + 1))
+    setting = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.owner.username
