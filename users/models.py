@@ -19,8 +19,8 @@ class Team(models.Model):
 class Setting(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='setting')
     timezone = models.CharField(max_length=3,
-                                choices=[(str(number), pytz.all_timezones[number]) for number in range(1, len(pytz.all_timezones))],
-                                default=str(pytz.all_timezones.index(settings.TIME_ZONE) + 1))
+                                choices=[(str(number), pytz.all_timezones[number]) for number in range(0, len(pytz.all_timezones))],
+                                default=str(pytz.all_timezones.index(settings.TIME_ZONE)))
     setting = models.JSONField(null=True, blank=True)
 
     def __str__(self):

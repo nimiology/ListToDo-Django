@@ -1,8 +1,10 @@
+import pytz
 from django.db.models import Q
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
 from rest_framework.generics import get_object_or_404, RetrieveAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from tasks_api.models import ProjectUser
 from tasks_api.permissions import IsOwnerOrCreatOnly
@@ -91,3 +93,12 @@ class SettingAPI(RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.request.user)
+
+
+timezones = [{'id': str(number), 'timezone': pytz.all_timezones[number]} for number in
+             range(0, len(pytz.all_timezones))]
+
+
+class GetAllTimeZonesAPI(APIView):
+    def get(self, request, *args, **kwargs):
+        return Response(timezones)
