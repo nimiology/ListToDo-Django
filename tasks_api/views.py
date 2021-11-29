@@ -198,16 +198,16 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         user = self.request.user
         obj = self.get_object()
-        project = obj.project
+        project = obj.section.project
         check_creating_task(serializer, project, self.request.user)
-        obj = serializer.save(owner=obj.owner, project=project)
+        obj = serializer.save(owner=obj.owner)
         Activity(assignee=user, project=project, task=obj, status='U',
                  description=f'{user} edited a task: {obj.title}').save()
         return obj
 
     def perform_destroy(self, instance):
         user = self.request.user
-        project = instance.project
+        project = instance.section.project
         Activity(assignee=user, project=project, status='D',
                  description=f'{user} deleted a task: {instance.title}').save()
         return instance.delete()
