@@ -37,10 +37,12 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
 class MyProjectsAPI(ListAPIView):
     serializer_class = ProjectUsersSerializer4JoinProject
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['project__title', 'project__project',
-                        'project__color', 'project__label',
-                        'project__archive', 'project__created',
-                        'project__schedule', ]
+
+    filterset_fields = {'project__project': ['exact', 'isnull'],
+                        'project__title': ['exact'],
+                        'project__color': ['exact'], 'project__label': ['exact'],
+                        'project__archive': ['exact'], 'project__created': ['exact'],
+                        'project__schedule': ['exact']}
 
     def get_queryset(self):
         user = self.request.user
