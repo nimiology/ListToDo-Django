@@ -44,7 +44,7 @@ def check_creating_task(serializer, project, user):
         if section.project != project:
             raise ValidationError('The section is not in the project!')
     if task:
-        if task.section.project != section.project:
+        if task.section.project != project:
             raise ValidationError('The task is not found!')
     if label:
         for l in label:
