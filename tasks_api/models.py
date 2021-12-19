@@ -62,7 +62,7 @@ class ProjectUser(models.Model):
 
 class Section(models.Model):
     title = models.CharField(max_length=512)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, blank=True, null=True, related_name='sections')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='sections')
     position = models.IntegerField(blank=True, null=True)
     archive = models.BooleanField(default=False)
 
