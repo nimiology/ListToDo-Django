@@ -218,8 +218,18 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
 class TasksAPI(ListAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['title', 'assignee', 'section', 'task', 'description', 'color', 'label', 'priority',
-                        'completed', 'created', 'schedule', 'completedDate', ]
+    filterset_fields = {'title': ['exact'],
+                        'assignee': ['exact'],
+                        'section': ['exact'],
+                        'task': ['exact', 'isnull'],
+                        'description': ['exact'],
+                        'color': ['exact'],
+                        'label': ['exact'],
+                        'priority': ['exact'],
+                        'completed': ['exact'],
+                        'created': ['exact'],
+                        'schedule': ['exact'],
+                        'completedDate': ['exact'], }
 
     def get_queryset(self):
         user = self.request.user
@@ -306,6 +316,10 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         obj2 = serializer.validated_data.get('obj2')
         self.check_object_permissions(request=self.request, obj=obj1)
         self.check_object_permissions(request=self.request, obj=obj2)
+        if request_to_model == 'task':
+            if obj1.section != obj2.section:
+                raise ValidationError("These are not in a same section!")
+        section = obj1.section
         position1 = obj2.position
         position2 = obj1.position
         obj2.position = None
