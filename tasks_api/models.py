@@ -9,10 +9,10 @@ from users.models import Team, Setting
 
 
 class Color(models.Model):
-    title = models.CharField(primary_key=True, max_length=256)
+    color = models.CharField(max_length=256)
 
     def __str__(self):
-        return self.title
+        return self.color
 
 
 class Label(models.Model):
