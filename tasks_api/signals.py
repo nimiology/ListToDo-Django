@@ -35,7 +35,7 @@ def project_users_pre_save(sender, instance, *args, **kwargs):
             project_user = projects_user[0]
             instance.position = project_user.position + 1
         else:
-            instance.position = -1
+            instance.position = 1
 
 
 def task_pre_save(sender, instance, *args, **kwargs):

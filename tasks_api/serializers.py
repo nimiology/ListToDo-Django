@@ -115,15 +115,16 @@ class ProjectUsersSerializer4JoinProject(serializers.ModelSerializer):
 
 
 class ChangeProjectPositionSerializer(serializers.Serializer):
-    obj1 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
-    obj2 = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
+    obj = serializers.PrimaryKeyRelatedField(queryset=ProjectUser.objects.all())
+    position = serializers.IntegerField()
 
 
 class ChangeSectionPositionSerializer(serializers.Serializer):
-    obj1 = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all())
-    obj2 = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all())
+    obj = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all())
+    position = serializers.IntegerField()
 
 
 class ChangeTaskPositionSerializer(serializers.Serializer):
-    obj1 = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all())
-    obj2 = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all())
+    obj = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all())
+    position = serializers.IntegerField()
+
