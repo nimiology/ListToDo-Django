@@ -1,7 +1,7 @@
 import pytz
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import pre_save, m2m_changed
+from django.db.models.signals import pre_save
 
 from ListToDo import settings
 from tasks_api.utils import upload_file
@@ -18,6 +18,8 @@ class Team(models.Model):
 
 class Setting(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='setting')
+    profile = models.ImageField(upload_to=upload_file, default='profile.jpg')
+    header = models.ImageField(upload_to=upload_file, default='header.jpg')
     timezone = models.CharField(max_length=3,
                                 choices=[(str(number), pytz.all_timezones[number]) for number in range(0, len(pytz.all_timezones))],
                                 default=str(pytz.all_timezones.index(settings.TIME_ZONE)))

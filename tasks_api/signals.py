@@ -32,10 +32,13 @@ def project_users_pre_save(sender, instance, *args, **kwargs):
     if instance.position is None:
         projects_user = sender.objects.filter(owner=instance.owner).order_by('-position')
         if projects_user.exists():
-            project_user = projects_user[0]
-            instance.position = project_user.position + 1
+            if len(projects_user) > 1:
+                project_user = projects_user[0]
+                instance.position = project_user.position + 1
+            else:
+                instance.position = 1
         else:
-            instance.position = 1
+            instance.position = -1
 
 
 def task_pre_save(sender, instance, *args, **kwargs):
