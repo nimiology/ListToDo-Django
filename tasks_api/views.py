@@ -343,9 +343,6 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
             objs = objs.order_by('position')
         else:
             raise ValidationError('wrong position!')
-        print(objs)
-
-        print(last_position)
         first_position = obj.position
         obj.position = last_position
         obj.save()
