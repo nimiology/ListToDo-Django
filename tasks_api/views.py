@@ -302,12 +302,15 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         if request_to_model == 'project':
             self.serializer_class = ChangeProjectPositionSerializer
             self.permission_classes = [IsAuthenticated & IsOwner]
+            objclass = Project
         elif request_to_model == 'section':
             self.serializer_class = ChangeSectionPositionSerializer
             self.permission_classes = [IsAuthenticated & IsItUsersProjectWithSection]
+            objclass = Section
         elif request_to_model == 'task':
             self.serializer_class = ChangeTaskPositionSerializer
             self.permission_classes = [IsAuthenticated & IsItUsersProjectWithTask]
+            objclass = Task
         else:
             raise ValidationError('The type params must be wrong!')
         serializer = self.get_serializer(data=request.data)
@@ -315,34 +318,28 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         obj = serializer.validated_data.get('obj')
         position = serializer.validated_data.get('position')
         self.check_object_permissions(request=self.request, obj=obj)
+        args = {}
+        if request_to_model == 'task':
+            args['section'] = obj.section
+            serializer = TaskSerializer(obj)
+        elif request_to_model == 'section':
+            args['project'] = obj.project
+            serializer = SectionSerializer(obj)
+        elif request_to_model == 'project':
+            args['owner'] = obj.owner
+            serializer = ProjectUsersSerializer4JoinProject(obj)
+        else:
+            raise ValidationError('The type params must be wrong!')
+        objs = objclass.objects.filter(position__gte=position, **args)
+        qs = objclass.objects.filter(**args)
+
         if obj.position > position:
-            if request_to_model == 'task':
-                objs = Task.objects.filter(section=obj.section, position__gte=position)
-                last_position = Task.objects.filter(section=obj.section).order_by('-position')[0].position + 1
-            elif request_to_model == 'section':
-                objs = Section.objects.filter(project=obj.project, position__gte=position)
-                last_position = Section.objects.filter(project=obj.project).order_by('-position')[0].position + 1
-            elif request_to_model == 'project':
-                objs = ProjectUser.objects.filter(owner=obj.owner, position__gte=position)
-                last_position = ProjectUser.objects.filter(owner=obj.owner).order_by('-position')[0].position + 1
-            else:
-                raise ValidationError('The type params must be wrong!')
             objs = objs.order_by('-position')
         elif obj.position < position:
-            if request_to_model == 'task':
-                objs = Task.objects.filter(section=obj.section, position__lte=position)
-                last_position = Task.objects.filter(section=obj.section).order_by('-position')[0].position + 1
-            elif request_to_model == 'section':
-                objs = Section.objects.filter(project=obj.project, position__lte=position)
-                last_position = Section.objects.filter(project=obj.project).order_by('-position')[0].position + 1
-            elif request_to_model == 'project':
-                objs = ProjectUser.objects.filter(owner=obj.owner, position__lte=position)
-                last_position = ProjectUser.objects.filter(owner=obj.owner).order_by('-position')[0].position + 1
-            else:
-                raise ValidationError('The type params must be wrong!')
             objs = objs.order_by('position')
         else:
             raise ValidationError('wrong position!')
+        last_position = qs.order_by('-position')[0].position + 2
         first_position = obj.position
         obj.position = last_position
         obj.save()
@@ -355,12 +352,4 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
                 object.save()
         obj.position = position
         obj.save()
-        if request_to_model == 'project':
-            serializer = ProjectUsersSerializer4JoinProject(obj)
-        elif request_to_model == 'section':
-            serializer = SectionSerializer(obj)
-        elif request_to_model == 'task':
-            serializer = TaskSerializer(obj)
-        else:
-            raise ValidationError('The type params must be wrong!')
         return Response(serializer.data)
