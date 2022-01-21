@@ -1,6 +1,6 @@
 from django.urls import path
 
-from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, ColorsAPI, \
+from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, \
     CreateSectionAPI, SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
     TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
     ChangeProjectsPositionsAPI
@@ -16,8 +16,6 @@ urlpatterns = [
     path('label/', LabelAPI.as_view()),
     path('label/<int:pk>/', LabelAPI.as_view()),
     path('labels/', MyLabelsAPI.as_view()),
-
-    path('colors/', ColorsAPI.as_view()),
 
     path('project/<int:pk>/section/', CreateSectionAPI.as_view()),
     path('section/<int:pk>/', SectionAPI.as_view()),

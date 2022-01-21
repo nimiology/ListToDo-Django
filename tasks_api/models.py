@@ -7,12 +7,7 @@ from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_
 from tasks_api.utils import upload_file
 from users.models import Team, Setting
 
-
-class Color(models.Model):
-    color = models.CharField(max_length=256)
-
-    def __str__(self):
-        return self.color
+COLORS_CHOICES = [[str(i), str(i)] for i in range(1, 9)]
 
 
 class Label(models.Model):
@@ -27,7 +22,6 @@ class Label(models.Model):
 
 class Project(models.Model):
     related_name = 'projects'
-
     VIEWS_CHOICES = [
         ('L', 'List'),
         ('B', 'Board'),
@@ -37,9 +31,6 @@ class Project(models.Model):
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     inviteSlug = models.SlugField(blank=True, null=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
-    label = models.ManyToManyField(Label, blank=True, related_name=related_name)
-    background = models.ImageField(upload_to=upload_file, blank=True, null=True)
     archive = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
@@ -49,9 +40,13 @@ class Project(models.Model):
 
 
 class ProjectUser(models.Model):
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='users')
     position = models.IntegerField(blank=True, null=True)
+    label = models.ManyToManyField(Label, blank=True, related_name='projects')
+    color = models.CharField(max_length=1, choices=COLORS_CHOICES, null=True, blank=True)
+    background = models.ImageField(upload_to=upload_file, blank=True, null=True)
 
     def __str__(self):
         return f'{self.owner} - {self.project}'
@@ -76,13 +71,8 @@ class Section(models.Model):
 
 class Task(models.Model):
     related_name = 'tasks'
-    PRIORITY_CHOICES = (
-        ('1', 'Priority 1'),
-        ('2', 'Priority 2'),
-        ('3', 'Priority 3'),
-        ('4', 'Priority 4'),
-        ('5', 'Priority 5'),
-    )
+    PRIORITY_CHOICES = [[str(i), f'Priority {i}'] for i in range(1, 6)]
+
     EVERYDAY_STATUS = (
         ('0', 'EveryDay'),
         ('1', 'Sunday'),
@@ -100,7 +90,7 @@ class Task(models.Model):
     task = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subcategories')
     title = models.CharField(max_length=512)
     description = models.TextField(null=True, blank=True)
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True, related_name=related_name)
+    color = models.CharField(max_length=1, choices=COLORS_CHOICES, null=True, blank=True)
     label = models.ManyToManyField(Label, blank=True, related_name=related_name)
     priority = models.CharField(max_length=1, choices=PRIORITY_CHOICES, blank=True, null=True)
     position = models.IntegerField(blank=True, null=True)
@@ -171,7 +161,7 @@ def project_post_save(sender, instance, created, *args, **kwargs):
                     ProjectUser(owner=user, project=instance).save()
 
 
-m2m_changed.connect(label_project_m2m_changed, Project.label.through)
+m2m_changed.connect(label_project_m2m_changed, ProjectUser.label.through)
 pre_save.connect(project_pre_save, Project)
 pre_save.connect(project_users_pre_save, ProjectUser)
 pre_save.connect(task_pre_save, Task)

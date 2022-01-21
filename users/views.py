@@ -17,8 +17,7 @@ from users.serializer import SettingSerializer, TeamSerializer
 
 class TeamAPI(CreateRetrieveUpdateDestroyAPIView):
     queryset = Team.objects.all()
-    permission_classes = [IsOwnerOrCreatOnly | (IsInTeam & ReadOnly),
-                          IsAuthenticated]
+    permission_classes = [IsOwnerOrCreatOnly | (IsInTeam & ReadOnly)]
     serializer_class = TeamSerializer
 
     def perform_create(self, serializer):
@@ -30,7 +29,6 @@ class TeamAPI(CreateRetrieveUpdateDestroyAPIView):
 
 class JoinTeamAPI(RetrieveAPIView):
     serializer_class = TeamSerializer
-    permission_classes = [IsAuthenticated]
     queryset = Team.objects.all()
     lookup_field = 'inviteSlug'
 
@@ -51,7 +49,7 @@ class JoinTeamAPI(RetrieveAPIView):
 
 class LeaveTeamAPI(RetrieveAPIView):
     serializer_class = TeamSerializer
-    permission_classes = [IsAuthenticated, IsInTeam]
+    permission_classes = [IsInTeam]
     queryset = Team.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -70,7 +68,6 @@ class LeaveTeamAPI(RetrieveAPIView):
 
 class AllTeamsAPI(ListAPIView):
     serializer_class = TeamSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Team.objects.filter(Q(owner=self.request.user) | Q(users__in=[self.request.user]))
@@ -85,7 +82,7 @@ class ChangeInviteSlugTeam(ChangeInviteSlugProject):
 class SettingAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SettingSerializer
     queryset = Setting.objects.all()
-    permission_classes = [IsAuthenticated, IsOwnerOrCreatOnly]
+    permission_classes = [IsOwnerOrCreatOnly]
 
     def get_object(self):
         setting = get_object_or_404(self.get_queryset(), owner=self.request.user)

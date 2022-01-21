@@ -1,13 +1,12 @@
 from rest_framework.exceptions import ValidationError, MethodNotAllowed
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView
 from rest_framework.response import Response
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, ProjectUser
+from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithProject, \
     IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask
-from tasks_api.serializers import ProjectSerializer, LabelSerializer, ColorSerializer, SectionSerializer, \
+from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
     ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer
 
@@ -17,7 +16,7 @@ from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_t
 
 class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsInProjectOrCreatOnly, IsAuthenticated]
+    permission_classes = [IsInProjectOrCreatOnly]
     queryset = Project.objects.all()
 
     def perform_create(self, serializer):
@@ -36,7 +35,6 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
 
 class MyProjectsAPI(ListAPIView):
     serializer_class = ProjectUsersSerializer4JoinProject
-    permission_classes = [IsAuthenticated]
 
     filterset_fields = {'project__project': ['exact', 'isnull'],
                         'project__title': ['exact'],
@@ -51,7 +49,6 @@ class MyProjectsAPI(ListAPIView):
 
 class JoinToProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
     queryset = Project.objects.all()
     lookup_field = 'inviteSlug'
 
@@ -74,7 +71,7 @@ class JoinToProject(RetrieveAPIView):
 
 class LeaveProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
+    permission_classes = [IsItUsersProjectWithProject]
     queryset = Project.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -93,7 +90,7 @@ class LeaveProject(RetrieveAPIView):
 
 class ChangeInviteSlugProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
+    permission_classes = [IsItUsersProjectWithProject]
     queryset = Project.objects.all()
 
     def get(self, request, *args, **kwargs):
@@ -105,7 +102,7 @@ class ChangeInviteSlugProject(RetrieveAPIView):
 
 class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [IsInProjectOrCreatOnly, IsAuthenticated]
+    permission_classes = [IsInProjectOrCreatOnly]
     queryset = Label.objects.all()
 
     def perform_create(self, serializer):
@@ -117,22 +114,15 @@ class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
 
 class MyLabelsAPI(ListAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Label.objects.filter(owner=self.request.user)
 
 
-class ColorsAPI(ListAPIView):
-    serializer_class = ColorSerializer
-    permission_classes = [IsAuthenticated]
-    queryset = Color.objects.all()
-
-
 class CreateSectionAPI(CreateAPIView):
     serializer_class = SectionSerializer
     queryset = Project.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
+    permission_classes = [IsItUsersProjectWithProject]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -146,7 +136,7 @@ class CreateSectionAPI(CreateAPIView):
 class SectionAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SectionSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithSection]
+    permission_classes = [IsItUsersProjectWithSection]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -167,7 +157,6 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
 
 class SectionsAPI(ListAPIView):
     serializer_class = SectionSerializer
-    permission_classes = [IsAuthenticated]
     filterset_fields = ['title', 'project', 'archive', ]
 
     def get_queryset(self):
@@ -179,7 +168,7 @@ class SectionsAPI(ListAPIView):
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer
     queryset = Section.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithSection]
+    permission_classes = [IsItUsersProjectWithSection]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -195,7 +184,7 @@ class CreateTaskAPI(CreateAPIView):
 class TaskAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithTask]
+    permission_classes = [IsItUsersProjectWithTask]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -217,7 +206,6 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
 
 class TasksAPI(ListAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
     filterset_fields = {'title': ['exact'],
                         'assignee': ['exact'],
                         'section': ['exact'],
@@ -240,7 +228,7 @@ class TasksAPI(ListAPIView):
 class CreateCommentAPI(CreateAPIView):
     serializer_class = CommentSerializer
     queryset = Project.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithProject]
+    permission_classes = [IsItUsersProjectWithProject]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -255,7 +243,7 @@ class CreateCommentAPI(CreateAPIView):
 class CommentAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
-    permission_classes = [IsAuthenticated, IsItUsersProjectWithSection]
+    permission_classes = [IsItUsersProjectWithSection]
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -277,7 +265,6 @@ class CommentAPI(RetrieveUpdateDestroyAPIView):
 
 class CommentsAPI(ListAPIView):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
     filterset_fields = ['project', 'task', ]
 
     def get_queryset(self):
@@ -288,7 +275,6 @@ class CommentsAPI(ListAPIView):
 
 class ActivityAPI(ListAPIView):
     serializer_class = ActivitySerializer
-    permission_classes = [IsAuthenticated]
     filterset_fields = ['assignee', 'project', 'section', 'task', 'comment', 'status', ]
 
     def get_queryset(self):
@@ -301,15 +287,15 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         request_to_model = request.GET.get('type')
         if request_to_model == 'project':
             self.serializer_class = ChangeProjectPositionSerializer
-            self.permission_classes = [IsAuthenticated & IsOwner]
+            self.permission_classes = [IsOwner]
             objclass = Project
         elif request_to_model == 'section':
             self.serializer_class = ChangeSectionPositionSerializer
-            self.permission_classes = [IsAuthenticated & IsItUsersProjectWithSection]
+            self.permission_classes = [IsItUsersProjectWithSection]
             objclass = Section
         elif request_to_model == 'task':
             self.serializer_class = ChangeTaskPositionSerializer
-            self.permission_classes = [IsAuthenticated & IsItUsersProjectWithTask]
+            self.permission_classes = [IsItUsersProjectWithTask]
             objclass = Task
         else:
             raise ValidationError('The type params must be wrong!')

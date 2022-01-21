@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ReadOnlyField
 
-from tasks_api.models import Project, Label, Color, Section, Task, Comment, Activity, ProjectUser
+from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
 
 
 class ProjectUsersSerializer(serializers.ModelSerializer):
@@ -11,12 +11,6 @@ class ProjectUsersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectUser
-        fields = '__all__'
-
-
-class ColorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Color
         fields = '__all__'
 
 
@@ -64,7 +58,6 @@ class TaskSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['assignee'] = UserSerializer(read_only=True)
         self.fields['task'] = ReadOnlyField(source='task.title')
-        self.fields['color'] = ColorSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(TaskSerializer, self).to_representation(instance)
 
