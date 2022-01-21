@@ -4,10 +4,10 @@ from tasks_api.views import ProjectsAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, L
     CreateSectionAPI, SectionAPI, CreateTaskAPI, CreateCommentAPI, CommentAPI, \
     TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
     ChangeProjectsPositionsAPI
-
+app_name = 'tasks_api'
 urlpatterns = [
-    path('project/', ProjectsAPI.as_view()),
-    path('project/<int:pk>/', ProjectsAPI.as_view()),
+    path('project/', ProjectsAPI.as_view(), name='create_project'),
+    path('project/<int:pk>/', ProjectsAPI.as_view(), name='project'),
     path('project/<int:pk>/inviteslug/', ChangeInviteSlugProject.as_view()),
     path('projects/', MyProjectsAPI.as_view()),
     path('project/invite/<inviteSlug>/', JoinToProject.as_view()),

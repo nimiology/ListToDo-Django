@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -19,10 +20,15 @@ refresh = RefreshToken.for_user(user)
 access_token = str(refresh.access_token)
 
 
-class ProjectAPITest(APITestCase):
+class ProjectAPITestcase(APITestCase):
     def setUp(self) -> None:
-        self.project = Project.objects.create(title='test', owner=user,
-                                              team=team)
+        self.project = Project.objects.create(owner=user, title='test', team=team)
+
+    def test_create_project(self):
+        response = self.client.post(reverse('tasks_api:create_project'), HTTP_AUTHORIZATION=access_token,
+                                    data={'title': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 user.delete()
+user2.delete()
