@@ -1,6 +1,6 @@
 from rest_framework.exceptions import ValidationError, MethodNotAllowed
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView
+    GenericAPIView, UpdateAPIView
 from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
@@ -8,7 +8,8 @@ from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithPr
     IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
-    ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer
+    ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer, \
+    ProjectUsersPersonalizeSerializer
 
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
     slug_genrator
@@ -35,16 +36,21 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
 
 class MyProjectsAPI(ListAPIView):
     serializer_class = ProjectUsersSerializer4JoinProject
-
     filterset_fields = {'project__project': ['exact', 'isnull'],
                         'project__title': ['exact'],
-                        'project__color': ['exact'], 'project__label': ['exact'],
+                        'color': ['exact'], 'label': ['exact'],
                         'project__archive': ['exact'], 'project__created': ['exact'],
                         'project__schedule': ['exact']}
 
     def get_queryset(self):
         user = self.request.user
         return ProjectUser.objects.filter(owner=user).order_by('position')
+
+
+class PersonalizeProjectAPI(UpdateAPIView):
+    serializer_class = ProjectUsersPersonalizeSerializer
+    queryset = ProjectUser.objects.all()
+    permission_classes = [IsOwner]
 
 
 class JoinToProject(RetrieveAPIView):

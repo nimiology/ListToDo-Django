@@ -14,6 +14,14 @@ class ProjectUsersSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=True, required=False)
+
+    class Meta:
+        model = ProjectUser
+        exclude = ['position', 'owner', 'project']
+
+
 class LabelSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True, required=False)
 
@@ -24,7 +32,6 @@ class LabelSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True, required=False)
-    users = UserSerializer(read_only=True, many=True)
 
     class Meta:
         model = Project
@@ -120,4 +127,3 @@ class ChangeSectionPositionSerializer(serializers.Serializer):
 class ChangeTaskPositionSerializer(serializers.Serializer):
     obj = serializers.PrimaryKeyRelatedField(queryset=Task.objects.all())
     position = serializers.IntegerField()
-
