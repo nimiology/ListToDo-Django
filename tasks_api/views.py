@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
 from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithProject, \
-    IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask
+    IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask, IsOwnerOrCreatOnly
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
     ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer, \
@@ -108,7 +108,7 @@ class ChangeInviteSlugProject(RetrieveAPIView):
 
 class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
     serializer_class = LabelSerializer
-    permission_classes = [IsInProjectOrCreatOnly]
+    permission_classes = [IsOwnerOrCreatOnly]
     queryset = Label.objects.all()
 
     def perform_create(self, serializer):

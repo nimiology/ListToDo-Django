@@ -5,7 +5,7 @@ from tasks_api.models import ProjectUser
 
 class IsOwnerOrCreatOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return (request.user == obj.owner and request.user.is_authenticated) or request.method == 'POST'
+        return request.user == obj.owner or request.method == 'POST'
 
 
 class IsOwner(BasePermission):
