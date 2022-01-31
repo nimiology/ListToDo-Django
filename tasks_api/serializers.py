@@ -15,12 +15,15 @@ class ProjectUsersSerializer(serializers.ModelSerializer):
 
 
 class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
-
     class Meta:
         model = ProjectUser
-        exclude = ['position', 'owner', 'project']
+        fields = ['label', 'color', 'background']
 
+    def to_representation(self, instance):
+        self.Meta.fields.append('owner')
+        self.fields['owner'] = UserSerializer(read_only=True)
+        self.fields['label'] = LabelSerializer(read_only=True, many=True)
+        return super(ProjectUsersPersonalizeSerializer, self).to_representation(instance)
 
 class LabelSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True, required=False)
