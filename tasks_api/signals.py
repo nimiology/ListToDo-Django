@@ -15,9 +15,9 @@ def project_pre_save(sender, instance, *args, **kwargs):
     else:
         try:
             inbox_project = sender.objects.get(owner=instance.owner, project__isnull=True)
+            instance.project = inbox_project
         except sender.DoesNotExist:
             pass
-        instance.project = inbox_project
 
     if instance.team:
         if not instance.team.owner == instance.owner and not instance.owner in instance.team.users.all():
