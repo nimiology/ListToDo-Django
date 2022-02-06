@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
 
-from ListToDo import settings
+from config import settings
 from tasks_api.utils import upload_file
 from users.signals import team_pre_save
 

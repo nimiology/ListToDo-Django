@@ -12,6 +12,12 @@ def project_pre_save(sender, instance, *args, **kwargs):
     if instance.project:
         if instance.project.owner != instance.owner:
             raise ValidationError("That's not your project!")
+    else:
+        try:
+            inbox_project = sender.objects.get(owner=instance.owner, project__isnull=True)
+        except sender.DoesNotExist:
+            pass
+        instance.project = inbox_project
 
     if instance.team:
         if not instance.team.owner == instance.owner and not instance.owner in instance.team.users.all():
@@ -38,7 +44,7 @@ def project_users_pre_save(sender, instance, *args, **kwargs):
             else:
                 instance.position = 1
         else:
-            instance.position = -1
+            instance.position = 0
 
 
 def task_pre_save(sender, instance, *args, **kwargs):
