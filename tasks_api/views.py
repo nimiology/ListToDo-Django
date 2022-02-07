@@ -223,7 +223,7 @@ class TasksAPI(ListAPIView):
                         'completed': ['exact'],
                         'created': ['exact'],
                         'schedule': ['exact'],
-                        'completedDate': ['exact'], }
+                        'completedDate': ['exact', 'isnull'], }
 
     def get_queryset(self):
         user = self.request.user
