@@ -17,5 +17,6 @@ class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUser
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'profile_img',
-                  'header_img', 'timezone', 'setting']
-
+                  'header_img', 'timezone', 'setting', 'date_joined']
+        extra_kwargs = {'date_joined': {'read_only': True},
+                        'username': {'required': False}}
