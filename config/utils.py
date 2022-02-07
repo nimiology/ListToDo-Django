@@ -12,7 +12,7 @@ class TimezoneMiddleware:
         tzname = None
         user = self.get_request_user(request)
         if user:
-            tzname = pytz.all_timezones[int(user.setting.timezone)]
+            tzname = pytz.all_timezones[int(user.timezone)]
         if tzname:
             timezone.activate(pytz.timezone(tzname))
         else:

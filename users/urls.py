@@ -1,14 +1,14 @@
 from django.conf.urls import url
 from django.urls import path, include
 
-from users.views import SettingAPI, TeamAPI, JoinTeamAPI, LeaveTeamAPI, AllTeamsAPI, ChangeInviteSlugTeam, \
+from users.views import MyUsersAPI, TeamAPI, JoinTeamAPI, LeaveTeamAPI, AllTeamsAPI, ChangeInviteSlugTeam, \
     GetAllTimeZonesAPI
 
 urlpatterns = [
     url('auth/', include('djoser.urls')),
     url('auth/', include('djoser.urls.jwt')),
 
-    path('setting/', SettingAPI.as_view()),
+    path('myinfo/', MyUsersAPI.as_view()),
     path('timezones/', GetAllTimeZonesAPI.as_view()),
 
     path('team/', TeamAPI.as_view()),

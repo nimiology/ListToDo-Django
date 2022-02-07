@@ -1,7 +1,7 @@
 import pytz
 from django.db.models import Q
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
-from rest_framework.generics import get_object_or_404, RetrieveAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,9 +10,9 @@ from tasks_api.models import ProjectUser
 from tasks_api.permissions import IsOwnerOrCreatOnly
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView
 from tasks_api.views import ChangeInviteSlugProject
-from users.models import Setting, Team
+from users.models import Team, MyUser
 from users.permissions import IsInTeam, ReadOnly, IsTeamOwner
-from users.serializer import SettingSerializer, TeamSerializer
+from users.serializer import MyUserSerializer, TeamSerializer
 
 
 class TeamAPI(CreateRetrieveUpdateDestroyAPIView):
@@ -79,14 +79,13 @@ class ChangeInviteSlugTeam(ChangeInviteSlugProject):
     queryset = Team.objects.all()
 
 
-class SettingAPI(RetrieveUpdateDestroyAPIView):
-    serializer_class = SettingSerializer
-    queryset = Setting.objects.all()
+class MyUsersAPI(RetrieveUpdateAPIView):
+    serializer_class = MyUserSerializer
+    queryset = MyUser.objects.all()
     permission_classes = [IsOwnerOrCreatOnly]
 
     def get_object(self):
-        setting = get_object_or_404(self.get_queryset(), owner=self.request.user)
-        return setting
+        return self.request.user
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.request.user)

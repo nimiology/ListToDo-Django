@@ -1,7 +1,7 @@
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
-from users.models import Setting, Team
+from users.models import Team, MyUser
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -13,9 +13,9 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SettingSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(required=False, read_only=True)
-
+class MyUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Setting
-        fields = '__all__'
+        model = MyUser
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'profile_img',
+                  'header_img', 'timezone', 'setting']
+

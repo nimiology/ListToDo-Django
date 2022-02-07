@@ -24,6 +24,8 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv(), default='127.0.0.1')
 
+AUTH_USER_MODEL = 'users.MyUser'
+
 # Application definition
 
 INSTALLED_APPS = [
