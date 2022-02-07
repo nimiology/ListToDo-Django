@@ -1,9 +1,11 @@
 import pytz
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models.signals import pre_save
 
 from config import settings
 from tasks_api.utils import upload_file
+from users.signals import MyUser_pre_save
 
 
 class MyUser(AbstractUser):
@@ -25,3 +27,6 @@ class Team(models.Model):
     users = models.ManyToManyField(MyUser, blank=True, related_name='teams')
     profile = models.ImageField(upload_to=upload_file, blank=True)
     inviteSlug = models.SlugField(blank=True, null=True)
+
+
+pre_save.connect(MyUser_pre_save, MyUser)
