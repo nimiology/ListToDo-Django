@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ReadOnlyField
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
-from users.serializer import MyUserSerializer
+from users.serializers import MyUserSerializer
 
 
 class ProjectUsersSerializer(serializers.ModelSerializer):

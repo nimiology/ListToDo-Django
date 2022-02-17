@@ -12,7 +12,7 @@ from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView
 from tasks_api.views import ChangeInviteSlugProject
 from users.models import Team, MyUser
 from users.permissions import IsInTeam, ReadOnly, IsTeamOwner
-from users.serializer import MyUserSerializer, TeamSerializer
+from users.serializers import MyUserSerializer, TeamSerializer
 
 
 class TeamAPI(CreateRetrieveUpdateDestroyAPIView):
