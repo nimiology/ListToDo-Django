@@ -1,13 +1,13 @@
-from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ReadOnlyField
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
+from users.serializer import MyUserSerializer
 
 
 class ProjectUsersSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
+    owner = MyUserSerializer(read_only=True, required=False)
 
     class Meta:
         model = ProjectUser
@@ -21,12 +21,13 @@ class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.Meta.fields.append('owner')
-        self.fields['owner'] = UserSerializer(read_only=True)
+        self.fields['owner'] = MyUserSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(ProjectUsersPersonalizeSerializer, self).to_representation(instance)
 
+
 class LabelSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
+    owner = MyUserSerializer(read_only=True, required=False)
 
     class Meta:
         model = Label
@@ -34,7 +35,7 @@ class LabelSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
+    owner = MyUserSerializer(read_only=True, required=False)
 
     class Meta:
         model = Project
@@ -57,7 +58,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
+    owner = MyUserSerializer(read_only=True, required=False)
     section = SectionSerializer(read_only=True, required=False)
 
     class Meta:
@@ -66,14 +67,14 @@ class TaskSerializer(serializers.ModelSerializer):
         extra_kwargs = {'position': {'required': False}}
 
     def to_representation(self, instance):
-        self.fields['assignee'] = UserSerializer(read_only=True)
+        self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['task'] = ReadOnlyField(source='task.title')
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(TaskSerializer, self).to_representation(instance)
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True, required=False)
+    owner = MyUserSerializer(read_only=True, required=False)
     project = ProjectSerializer(read_only=True, required=False)
 
     class Meta:
@@ -99,7 +100,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_representation(self, instance):
-        self.fields['assignee'] = UserSerializer(read_only=True)
+        self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['project'] = ProjectSerializer(read_only=True)
         self.fields['section'] = SectionSerializer(read_only=True)
         self.fields['task'] = TaskSerializer(read_only=True)
@@ -109,7 +110,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
 class ProjectUsersSerializer4JoinProject(serializers.ModelSerializer):
     project = ProjectSerializer(required=False)
-    owner = UserSerializer(read_only=True, required=False)
+    owner = MyUserSerializer(read_only=True, required=False)
 
     class Meta:
         model = ProjectUser
