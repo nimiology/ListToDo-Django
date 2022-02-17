@@ -1,10 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import m2m_changed, pre_save, post_save
 
 from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save, \
     section_pre_save
 from tasks_api.utils import upload_file
-from users.models import Team, MyUser
+from users.models import Team
 
 COLORS_CHOICES = [[str(i), str(i)] for i in range(1, 9)]
 
@@ -12,7 +13,7 @@ COLORS_CHOICES = [[str(i), str(i)] for i in range(1, 9)]
 class Label(models.Model):
     related_name = 'labels'
 
-    owner = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name=related_name)
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name=related_name)
     title = models.CharField(max_length=256)
 
     def __str__(self):
@@ -26,7 +27,7 @@ class Project(models.Model):
         ('B', 'Board'),
     ]
     title = models.CharField(max_length=512)
-    owner = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='projects_owner')
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='projects_owner')
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     inviteSlug = models.SlugField(blank=True, null=True)
@@ -39,8 +40,7 @@ class Project(models.Model):
 
 
 class ProjectUser(models.Model):
-
-    owner = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='projects')
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='projects')
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='users')
     position = models.IntegerField(blank=True, null=True)
     label = models.ManyToManyField(Label, blank=True, related_name='projects')
@@ -83,9 +83,10 @@ class Task(models.Model):
         ('7', 'Saturday'),
     )
 
-    owner = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='task_creator')
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='task_creator')
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name=related_name)
-    assignee = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, blank=True, related_name=related_name)
+    assignee = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True,
+                                 related_name=related_name)
     task = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subcategories')
     title = models.CharField(max_length=512)
     description = models.TextField(null=True, blank=True)
@@ -110,7 +111,7 @@ class Task(models.Model):
 class Comment(models.Model):
     related_name = 'comments'
 
-    owner = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name=related_name)
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name=related_name)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name=related_name)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     description = models.TextField()
@@ -129,7 +130,7 @@ class Activity(models.Model):
         ('D', 'Deleted')
     )
 
-    assignee = models.ForeignKey(MyUser, models.SET_NULL, null=True, blank=True, related_name=related_name)
+    assignee = models.ForeignKey(get_user_model(), models.SET_NULL, null=True, blank=True, related_name=related_name)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True, related_name=related_name)
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, blank=True, null=True, related_name=related_name)
     task = models.ForeignKey(Task, on_delete=models.SET_NULL, blank=True, null=True, related_name=related_name)
@@ -164,5 +165,5 @@ pre_save.connect(project_pre_save, Project)
 pre_save.connect(project_users_pre_save, ProjectUser)
 pre_save.connect(task_pre_save, Task)
 pre_save.connect(section_pre_save, Section)
-post_save.connect(user_post_save, MyUser)
+post_save.connect(user_post_save, get_user_model)
 post_save.connect(project_post_save, Project)

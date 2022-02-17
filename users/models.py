@@ -2,6 +2,7 @@ import pytz
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import pre_save
+from django.contrib.auth import get_user_model
 
 from config import settings
 from tasks_api.utils import upload_file
@@ -23,8 +24,8 @@ class MyUser(AbstractUser):
 
 class Team(models.Model):
     name = models.CharField(max_length=250)
-    owner = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='teams_owner')
-    users = models.ManyToManyField(MyUser, blank=True, related_name='teams')
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='teams_owner')
+    users = models.ManyToManyField(get_user_model(), blank=True, related_name='teams')
     profile = models.ImageField(upload_to=upload_file, blank=True)
     inviteSlug = models.SlugField(blank=True, null=True)
 
