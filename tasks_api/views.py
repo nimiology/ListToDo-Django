@@ -11,7 +11,7 @@ from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSer
     ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer, \
     ProjectUsersPersonalizeSerializer
 
-from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_creating_task, check_task_in_project, \
+from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_task_in_project, \
     slug_genrator
 
 
@@ -161,6 +161,8 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
+
+
 class SectionsAPI(ListAPIView):
     serializer_class = SectionSerializer
     filterset_fields = ['title', 'project', 'archive', ]
@@ -170,6 +172,27 @@ class SectionsAPI(ListAPIView):
         sections = Section.objects.filter(project__users__in=user.projects.all())
         return sections
 
+# util
+def check_creating_task(serializer, project, user):
+    assignee = serializer.validated_data.get('assignee')
+    section = serializer.validated_data.get('section')
+    task = serializer.validated_data.get('task')
+    label = serializer.validated_data.get('label')
+    if assignee:
+        try:
+            ProjectUser.objects.get(project=project, owner=assignee)
+        except ProjectUser.DoesNotExist:
+            raise ValidationError('The assignee is not in the project!')
+    if section:
+        if section.project != project:
+            raise ValidationError('The section is not in the project!')
+    if task:
+        if task.section.project != project:
+            raise ValidationError('The task is not found!')
+    if label:
+        for l in label:
+            if l.owner != user:
+                raise ValidationError('The label is not found!')
 
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer

@@ -2,7 +2,7 @@ import os
 import random
 import string
 
-from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView
 
 
@@ -32,29 +32,8 @@ class CreateRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView, CreateAPI
     pass
 
 
-def check_creating_task(serializer, project, user):
-    assignee = serializer.validated_data.get('assignee')
-    section = serializer.validated_data.get('section')
-    task = serializer.validated_data.get('task')
-    label = serializer.validated_data.get('label')
-    if assignee:
-        if not assignee in project.users.all() and assignee != project.owner:
-            raise ValidationError('The assignee is not in the project!')
-    if section:
-        if section.project != project:
-            raise ValidationError('The section is not in the project!')
-    if task:
-        if task.section.project != project:
-            raise ValidationError('The task is not found!')
-    if label:
-        for l in label:
-            if l.owner != user:
-                raise ValidationError('The label is not found!')
-
-
 def check_task_in_project(serializer, project):
     task = serializer.validated_data.get('task')
     if task:
         if task.project != project:
             raise ValidationError("The task is not in the project!")
-
