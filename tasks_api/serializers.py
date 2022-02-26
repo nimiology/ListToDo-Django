@@ -68,7 +68,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.fields['assignee'] = MyUserSerializer(read_only=True)
-        self.fields['task'] = ReadOnlyField(source='task.title')
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(TaskSerializer, self).to_representation(instance)
 
