@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.exceptions import ValidationError, MethodNotAllowed
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, UpdateAPIView
@@ -161,8 +162,6 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
-
-
 class SectionsAPI(ListAPIView):
     serializer_class = SectionSerializer
     filterset_fields = ['title', 'project', 'archive', ]
@@ -171,6 +170,7 @@ class SectionsAPI(ListAPIView):
         user = self.request.user
         sections = Section.objects.filter(project__users__in=user.projects.all())
         return sections
+
 
 # util
 def check_creating_task(serializer, project, user):
@@ -193,6 +193,7 @@ def check_creating_task(serializer, project, user):
         for l in label:
             if l.owner != user:
                 raise ValidationError('The label is not found!')
+
 
 class CreateTaskAPI(CreateAPIView):
     serializer_class = TaskSerializer
@@ -304,7 +305,13 @@ class CommentsAPI(ListAPIView):
 
 class ActivityAPI(ListAPIView):
     serializer_class = ActivitySerializer
-    filterset_fields = ['assignee', 'project', 'section', 'task', 'comment', 'status', ]
+    filterset_fields = {'assignee': ['exact'],
+                        'project': ['exact'],
+                        'section': ['exact'],
+                        'task': ['exact'],
+                        'comment': ['exact'],
+                        'status': ['exact'],
+                        'created': ['gte', 'lte', 'exact', 'gt', 'lt']}
 
     def get_queryset(self):
         user = self.request.user
