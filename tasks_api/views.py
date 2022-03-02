@@ -305,6 +305,7 @@ class CommentsAPI(ListAPIView):
 
 class ActivityAPI(ListAPIView):
     serializer_class = ActivitySerializer
+    pagination_class = None
     filterset_fields = {'assignee': ['exact'],
                         'project': ['exact'],
                         'section': ['exact'],
