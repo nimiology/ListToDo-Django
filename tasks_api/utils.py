@@ -2,6 +2,7 @@ import os
 import random
 import string
 
+from requests.compat import basestring
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView
 
@@ -37,3 +38,4 @@ def check_task_in_project(serializer, project):
     if task:
         if task.project != project:
             raise ValidationError("The task is not in the project!")
+

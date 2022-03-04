@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ReadOnlyField
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
 from users.serializers import MyUserSerializer
@@ -45,6 +44,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['users'] = ProjectUsersSerializer(read_only=True, many=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
+        self.fields['parent_projects'] = serializers.ReadOnlyField()
         return super(ProjectSerializer, self).to_representation(instance)
 
 
@@ -69,6 +69,7 @@ class TaskSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
+        self.fields['parent_tasks'] = serializers.ReadOnlyField()
         return super(TaskSerializer, self).to_representation(instance)
 
 
