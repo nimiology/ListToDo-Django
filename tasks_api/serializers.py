@@ -44,7 +44,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['users'] = ProjectUsersSerializer(read_only=True, many=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
-        self.fields['parent_projects'] = serializers.ReadOnlyField()
+        self.fields['parent_projects'] = ProjectSerializer(many=True)
         return super(ProjectSerializer, self).to_representation(instance)
 
 
@@ -69,7 +69,7 @@ class TaskSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
-        self.fields['parent_tasks'] = serializers.ReadOnlyField()
+        self.fields['parent_tasks'] = TaskSerializer(many=True)
         return super(TaskSerializer, self).to_representation(instance)
 
 

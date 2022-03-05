@@ -42,7 +42,7 @@ class Project(models.Model):
         project = self.project
         projects = []
         while project:
-            projects.append(project.pk)
+            projects.append(project)
             project = project.project
         return projects
 
@@ -119,7 +119,7 @@ class Task(models.Model):
         task = self.task
         tasks = []
         while task:
-            tasks.append(task.pk)
+            tasks.append(task)
             task = task.task
         return tasks
 
