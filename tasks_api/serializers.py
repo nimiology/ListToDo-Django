@@ -45,6 +45,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         self.fields['users'] = ProjectUsersSerializer(read_only=True, many=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         self.fields['parent_projects'] = ProjectSerializer(many=True)
+        self.fields['count_subprojects'] = serializers.ReadOnlyField()
+        self.fields['count_section'] = serializers.ReadOnlyField()
+        self.fields['count_tasks'] = serializers.ReadOnlyField()
         return super(ProjectSerializer, self).to_representation(instance)
 
 

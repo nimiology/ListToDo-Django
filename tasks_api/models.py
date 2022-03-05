@@ -46,6 +46,15 @@ class Project(models.Model):
             project = project.project
         return projects
 
+    def count_subprojects(self):
+        return len(self.subprojects.all())
+
+    def count_section(self):
+        return len(self.sections.all())
+
+    def count_tasks(self):
+        return len(Task.objects.filter(section__project=self))
+
 
 class ProjectUser(models.Model):
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='projects')
@@ -122,6 +131,7 @@ class Task(models.Model):
             tasks.append(task)
             task = task.task
         return tasks
+
 
 
 class Comment(models.Model):
