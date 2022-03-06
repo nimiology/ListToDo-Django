@@ -342,7 +342,7 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         if request_to_model == 'project':
             self.serializer_class = ChangeProjectPositionSerializer
             self.permission_classes = [IsOwner]
-            objclass = Project
+            objclass = ProjectUser
         elif request_to_model == 'section':
             self.serializer_class = ChangeSectionPositionSerializer
             self.permission_classes = [IsItUsersProjectWithSection]
