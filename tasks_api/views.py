@@ -10,7 +10,7 @@ from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithPr
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
     ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer, \
-    ProjectUsersPersonalizeSerializer
+    ProjectUsersPersonalizeSerializer, ActivityLiteSerializer
 
 from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_task_in_project, \
     slug_genrator
@@ -329,6 +329,8 @@ class ActivityAPI(ListAPIView):
     def get(self, request, *args, **kwargs):
         if not self.boolean(request.GET.get('pagination')):
             self.pagination_class = None
+        if not self.boolean(request.GET.get('lite')):
+            self.serializer_class = ActivityLiteSerializer
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
