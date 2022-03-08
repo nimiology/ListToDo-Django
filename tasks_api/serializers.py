@@ -112,6 +112,11 @@ class ActivitySerializer(serializers.ModelSerializer):
         self.fields['comment'] = CommentSerializer(read_only=True)
         return super(ActivitySerializer, self).to_representation(instance)
 
+class ActivityLiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = ['id', 'created']
+
 
 class ProjectUsersSerializer4JoinProject(serializers.ModelSerializer):
     project = ProjectSerializer(required=False)
