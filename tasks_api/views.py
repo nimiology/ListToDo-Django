@@ -329,7 +329,7 @@ class ActivityAPI(ListAPIView):
     def get(self, request, *args, **kwargs):
         if not self.boolean(request.GET.get('pagination')):
             self.pagination_class = None
-        if not self.boolean(request.GET.get('lite')):
+        if self.boolean(request.GET.get('lite')):
             self.serializer_class = ActivityLiteSerializer
         return self.list(request, *args, **kwargs)
 
