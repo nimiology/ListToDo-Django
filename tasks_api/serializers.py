@@ -13,16 +13,7 @@ class ProjectUsersSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProjectUser
-        fields = ['label', 'color', 'background']
 
-    def to_representation(self, instance):
-        self.Meta.fields.append('owner')
-        self.fields['owner'] = MyUserSerializer(read_only=True)
-        self.fields['label'] = LabelSerializer(read_only=True, many=True)
-        return super(ProjectUsersPersonalizeSerializer, self).to_representation(instance)
 
 
 class LabelSerializer(serializers.ModelSerializer):
@@ -49,7 +40,18 @@ class ProjectSerializer(serializers.ModelSerializer):
         self.fields['count_section'] = serializers.ReadOnlyField()
         self.fields['count_tasks'] = serializers.ReadOnlyField()
         return super(ProjectSerializer, self).to_representation(instance)
+class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectUser
+        fields = ['label', 'color', 'background']
 
+    def to_representation(self, instance):
+        self.fields['id'] = serializers.ReadOnlyField()
+        self.fields['position'] = serializers.ReadOnlyField()
+        self.fields['owner'] = MyUserSerializer(read_only=True)
+        self.fields['project'] = ProjectSerializer(read_only=True)
+        self.fields['label'] = LabelSerializer(read_only=True, many=True)
+        return super(ProjectUsersPersonalizeSerializer, self).to_representation(instance)
 
 class SectionSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True, required=False)
