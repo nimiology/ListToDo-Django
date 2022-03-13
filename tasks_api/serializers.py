@@ -13,9 +13,6 @@ class ProjectUsersSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
-
-
 class LabelSerializer(serializers.ModelSerializer):
     owner = MyUserSerializer(read_only=True, required=False)
 
@@ -30,7 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
-        read_only_fields = ('inviteSlug',)
+        read_only_fields = ('inviteSlug', 'inbox')
 
     def to_representation(self, instance):
         self.fields['users'] = ProjectUsersSerializer(read_only=True, many=True)
@@ -40,6 +37,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         self.fields['count_section'] = serializers.ReadOnlyField()
         self.fields['count_tasks'] = serializers.ReadOnlyField()
         return super(ProjectSerializer, self).to_representation(instance)
+
+
 class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectUser
@@ -52,6 +51,7 @@ class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
         self.fields['project'] = ProjectSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         return super(ProjectUsersPersonalizeSerializer, self).to_representation(instance)
+
 
 class SectionSerializer(serializers.ModelSerializer):
     project = ProjectSerializer(read_only=True, required=False)
@@ -111,6 +111,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         self.fields['task'] = TaskSerializer(read_only=True)
         self.fields['comment'] = CommentSerializer(read_only=True)
         return super(ActivitySerializer, self).to_representation(instance)
+
 
 class ActivityLiteSerializer(serializers.ModelSerializer):
     class Meta:

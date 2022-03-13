@@ -12,9 +12,15 @@ def project_pre_save(sender, instance, *args, **kwargs):
     if instance.project:
         if instance.project.owner != instance.owner:
             raise ValidationError("That's not your project!")
+
+        if instance.project == instance:
+            instance.project = None
+
+        if instance.project.project == instance:
+            raise ValidationError("most likely due to a circular parent projects")
     else:
         try:
-            inbox_project = sender.objects.get(owner=instance.owner, project__isnull=True)
+            inbox_project = sender.objects.get(owner=instance.owner, inbox=True)
             instance.project = inbox_project
         except sender.DoesNotExist:
             pass
@@ -22,6 +28,9 @@ def project_pre_save(sender, instance, *args, **kwargs):
     if instance.team:
         if not instance.team.owner == instance.owner and not instance.owner in instance.team.users.all():
             raise ValidationError("You're not in the team!")
+
+    if instance.inbox:
+        raise ValidationError("Can't modify inbox")
 
 
 def section_pre_save(sender, instance, *args, **kwargs):

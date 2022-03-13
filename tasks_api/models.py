@@ -32,6 +32,7 @@ class Project(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
     inviteSlug = models.SlugField(blank=True, null=True)
     archive = models.BooleanField(default=False)
+    inbox = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     schedule = models.DateTimeField(blank=True, null=True)
 
@@ -197,7 +198,7 @@ post_save.connect(project_post_save, Project)
 
 def MyUser_post_save(sender, created, instance, *args, **kwargs):
     if created:
-        Project.objects.create(owner=instance, title='inbox')
+        Project.objects.create(owner=instance, title='inbox', inbox=True)
 
 
 post_save.connect(MyUser_post_save, MyUser)

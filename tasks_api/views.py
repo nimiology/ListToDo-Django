@@ -41,7 +41,7 @@ class MyProjectsAPI(ListAPIView):
                         'project__title': ['exact'],
                         'color': ['exact'], 'label': ['exact'],
                         'project__archive': ['exact'], 'project__created': ['exact'],
-                        'project__schedule': ['exact']}
+                        'project__schedule': ['exact'], 'project__inbox': ['exact']}
 
     def get_queryset(self):
         user = self.request.user
