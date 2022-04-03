@@ -24,14 +24,14 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
     def perform_create(self, serializer):
         user = self.request.user
         obj = serializer.save(owner=user)
-        Activity(assignee=user, project=obj, status='C').save()
+        Activity(assignee=user, project=obj, status='C', description=f'{user} created a project: {obj.title}').save()
         return obj
 
     def perform_update(self, serializer):
         user = self.request.user
         project = self.get_object()
         obj = serializer.save(owner=project.owner)
-        Activity(assignee=user, project=obj, status='U').save()
+        Activity(assignee=user, project=obj, status='U', description=f'{user} edited a project: {obj.title}').save()
         return obj
 
 
@@ -87,7 +87,10 @@ class LeaveProject(RetrieveAPIView):
     def post(self, request, *args, **kwargs):
         project = self.get_object()
         if project.owner != request.user:
-            project.users.remove(request.user)
+            try:
+                project.users.get(owner=request.user).delete()
+            except ProjectUser.DoesNotExist:
+                raise ValidationError("You are not in this project!")
             serializer = self.get_serializer(project)
             return Response(serializer.data)
 
