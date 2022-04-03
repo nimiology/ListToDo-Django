@@ -30,7 +30,8 @@ def project_pre_save(sender, instance, *args, **kwargs):
             raise ValidationError("You're not in the team!")
 
     if instance.inbox:
-        raise ValidationError("Can't modify inbox")
+        if instance.pk:
+            raise ValidationError("Can't modify inbox")
 
 
 def section_pre_save(sender, instance, *args, **kwargs):
