@@ -1,27 +1,24 @@
 import pytz
 from django.db.models import Q
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
-from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, \
+    ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tasks_api.models import ProjectUser
 from tasks_api.permissions import IsOwnerOrCreatOnly
-from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView
 from tasks_api.views import ChangeInviteSlugProject
 from users.models import Team, MyUser
 from users.permissions import IsInTeam, ReadOnly, IsTeamOwner
 from users.serializers import MyUserSerializer, TeamSerializer
 
 
-class TeamAPI(CreateRetrieveUpdateDestroyAPIView):
+class TeamAPI(RetrieveUpdateDestroyAPIView):
     queryset = Team.objects.all()
     permission_classes = [IsOwnerOrCreatOnly | (IsInTeam & ReadOnly)]
     serializer_class = TeamSerializer
-
-    def perform_create(self, serializer):
-        return serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.request.user)
@@ -66,11 +63,14 @@ class LeaveTeamAPI(RetrieveAPIView):
             raise ValidationError("You can't leave to your own team!")
 
 
-class AllTeamsAPI(ListAPIView):
+class AllTeamsAPI(ListCreateAPIView):
     serializer_class = TeamSerializer
 
     def get_queryset(self):
         return Team.objects.filter(Q(owner=self.request.user) | Q(users__in=[self.request.user]))
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
 
 
 class ChangeInviteSlugTeam(ChangeInviteSlugProject):

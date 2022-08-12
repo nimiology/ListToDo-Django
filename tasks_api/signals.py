@@ -2,12 +2,12 @@ import datetime
 
 from rest_framework.exceptions import ValidationError
 
-from tasks_api.utils import slug_genrator
+from tasks_api.utils import slug_generator
 
 
 def project_pre_save(sender, instance, *args, **kwargs):
     if not instance.inviteSlug:
-        instance.inviteSlug = slug_genrator()
+        instance.inviteSlug = slug_generator()
 
     if instance.project:
         if instance.project.owner != instance.owner:

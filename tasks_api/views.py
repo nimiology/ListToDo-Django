@@ -1,7 +1,7 @@
 from requests.compat import basestring
-from rest_framework.exceptions import ValidationError, MethodNotAllowed
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView, UpdateAPIView
+    GenericAPIView, UpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
@@ -12,20 +12,13 @@ from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSer
     ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer, \
     ProjectUsersPersonalizeSerializer, ActivityLiteSerializer
 
-from tasks_api.utils import CreateRetrieveUpdateDestroyAPIView, check_task_in_project, \
-    slug_genrator
+from tasks_api.utils import slug_generator
 
 
-class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
+class ProjectAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [IsInProjectOrCreatOnly]
     queryset = Project.objects.all()
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        obj = serializer.save(owner=user)
-        Activity(assignee=user, project=obj, status='C', description=f'{user} created a project: {obj.title}').save()
-        return obj
 
     def perform_update(self, serializer):
         user = self.request.user
@@ -35,7 +28,7 @@ class ProjectsAPI(CreateRetrieveUpdateDestroyAPIView):
         return obj
 
 
-class MyProjectsAPI(ListAPIView):
+class MyProjectsAPI(ListCreateAPIView):
     serializer_class = ProjectUsersSerializer4JoinProject
     filterset_fields = {'project__project': ['exact', 'isnull'],
                         'project__title': ['exact'],
@@ -46,6 +39,12 @@ class MyProjectsAPI(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return ProjectUser.objects.filter(owner=user).order_by('position')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        obj = serializer.save(owner=user)
+        Activity(assignee=user, project=obj, status='C', description=f'{user} created a project: {obj.title}').save()
+        return obj
 
 
 class PersonalizeProjectAPI(UpdateAPIView):
@@ -58,9 +57,6 @@ class JoinToProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
     queryset = Project.objects.all()
     lookup_field = 'inviteSlug'
-
-    def get(self, request, *args, **kwargs):
-        raise MethodNotAllowed('GET')
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
@@ -80,9 +76,6 @@ class LeaveProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
     permission_classes = [IsItUsersProjectWithProject]
     queryset = Project.objects.all()
-
-    def get(self, request, *args, **kwargs):
-        raise MethodNotAllowed('GET')
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
@@ -105,25 +98,25 @@ class ChangeInviteSlugProject(RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         obj = self.get_object()
-        obj.inviteSlug = slug_genrator()
+        obj.inviteSlug = slug_generator()
         obj.save()
         return self.retrieve(request, *args, **kwargs)
 
 
-class LabelAPI(CreateRetrieveUpdateDestroyAPIView):
+class LabelAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = LabelSerializer
     permission_classes = [IsOwnerOrCreatOnly]
     queryset = Label.objects.all()
-
-    def perform_create(self, serializer):
-        return serializer.save(owner=self.request.user)
 
     def perform_update(self, serializer):
         return serializer.save(owner=self.get_object().owner)
 
 
-class MyLabelsAPI(ListAPIView):
+class MyLabelsAPI(ListCreateAPIView):
     serializer_class = LabelSerializer
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
 
     def get_queryset(self):
         return Label.objects.filter(owner=self.request.user)
@@ -175,45 +168,6 @@ class SectionsAPI(ListAPIView):
         return sections
 
 
-# util
-def check_creating_task(serializer, project, user):
-    assignee = serializer.validated_data.get('assignee')
-    section = serializer.validated_data.get('section')
-    task = serializer.validated_data.get('task')
-    label = serializer.validated_data.get('label')
-    if assignee:
-        try:
-            ProjectUser.objects.get(project=project, owner=assignee)
-        except ProjectUser.DoesNotExist:
-            raise ValidationError('The assignee is not in the project!')
-    if section:
-        if section.project != project:
-            raise ValidationError('The section is not in the project!')
-    if task:
-        if task.section.project != project:
-            raise ValidationError('The task is not found!')
-    if label:
-        for l in label:
-            if l.owner != user:
-                raise ValidationError('The label is not found!')
-
-
-class CreateTaskAPI(CreateAPIView):
-    serializer_class = TaskSerializer
-    queryset = Section.objects.all()
-    permission_classes = [IsItUsersProjectWithSection]
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        section = self.get_object()
-        project = section.project
-        check_creating_task(serializer, project, self.request.user)
-        obj = serializer.save(owner=self.request.user, section=section)
-        Activity(assignee=user, project=project, task=obj, status='C',
-                 description=f'{user} created a task: {obj.title}').save()
-        return obj
-
-
 class TaskAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
@@ -223,7 +177,6 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
         user = self.request.user
         obj = self.get_object()
         project = obj.section.project
-        check_creating_task(serializer, project, self.request.user)
         obj = serializer.save(owner=obj.owner)
         Activity(assignee=user, project=project, task=obj, status='U',
                  description=f'{user} edited a task: {obj.title}').save()
@@ -237,7 +190,7 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
-class TasksAPI(ListAPIView):
+class TasksAPI(ListCreateAPIView):
     serializer_class = TaskSerializer
     filterset_fields = {'title': ['exact'],
                         'assignee': ['exact'],
@@ -257,19 +210,13 @@ class TasksAPI(ListAPIView):
         tasks = Task.objects.filter(section__project__users__in=user.projects.all())
         return tasks
 
-
-class CreateCommentAPI(CreateAPIView):
-    serializer_class = CommentSerializer
-    queryset = Project.objects.all()
-    permission_classes = [IsItUsersProjectWithProject]
-
     def perform_create(self, serializer):
         user = self.request.user
-        project = self.get_object()
-        check_task_in_project(serializer, project)
-        obj = serializer.save(owner=self.request.user, project=project)
-        Activity(assignee=user, project=project, comment=obj, status='C',
-                 description=f'{user} created a comment: {obj.project.title}').save()
+        section = self.get_object()
+        project = section.project
+        obj = serializer.save(owner=self.request.user, section=section)
+        Activity(assignee=user, project=project, task=obj, status='C',
+                 description=f'{user} created a task: {obj.title}').save()
         return obj
 
 
@@ -282,7 +229,6 @@ class CommentAPI(RetrieveUpdateDestroyAPIView):
         user = self.request.user
         obj = self.get_object()
         project = obj.project
-        check_task_in_project(serializer, obj.project)
         obj = serializer.save(owner=obj.owner, project=project)
         Activity(assignee=user, project=project, comment=obj, status='U',
                  description=f'{user} edited a comment: {obj.project.title}').save()
@@ -296,7 +242,7 @@ class CommentAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
-class CommentsAPI(ListAPIView):
+class CommentsAPI(ListCreateAPIView):
     serializer_class = CommentSerializer
     filterset_fields = ['project', 'task', ]
 
@@ -304,6 +250,14 @@ class CommentsAPI(ListAPIView):
         user = self.request.user
         comments = Comment.objects.filter(project__users__in=user.projects.all())
         return comments
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        project = self.get_object()
+        obj = serializer.save(owner=self.request.user, project=project)
+        Activity(assignee=user, project=project, comment=obj, status='C',
+                 description=f'{user} created a comment: {obj.project.title}').save()
+        return obj
 
 
 class ActivityAPI(ListAPIView):
@@ -318,7 +272,7 @@ class ActivityAPI(ListAPIView):
 
     def boolean(self, string):
         response = True
-        if string == 0 :
+        if string == 0:
             response = False
         if string == 1:
             response = True

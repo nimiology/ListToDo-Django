@@ -71,6 +71,33 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {'position': {'required': False}}
 
+    def _user(self):
+        request = self.context.get('request', None)
+        if request:
+            return request.user
+
+    def validate(self, attrs):
+        assignee = attrs.validated_data.get('assignee')
+        section = attrs.validated_data.get('section')
+        task = attrs.validated_data.get('task')
+        label = attrs.validated_data.get('label')
+        project = attrs.validated_data.get('project')
+        if assignee:
+            try:
+                ProjectUser.objects.get(project=project, owner=assignee)
+            except ProjectUser.DoesNotExist:
+                raise ValidationError('The assignee is not in the project!')
+        if section:
+            if section.project != project:
+                raise ValidationError('The section is not in the project!')
+        if task:
+            if task.section.project != project:
+                raise ValidationError('The task is not found!')
+        if label:
+            for l in label:
+                if l.owner != self._user():
+                    raise ValidationError('The label is not found!')
+
     def to_representation(self, instance):
         self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
@@ -86,12 +113,23 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
+    def _user(self):
+        request = self.context.get('request', None)
+        if request:
+            return request.user
+
     def validate(self, attrs):
         if 'file' in attrs:
             file_size = attrs['file'].size
             limit_mb = 10
             if file_size > limit_mb * 1024 * 1024:
                 raise ValidationError({"file": ["The file must be less than 10MB"]})
+        task = attrs.validated_data.get('task')
+        if task:
+            try:
+                task.project.users.get(owner=self._user())
+            except ProjectUser.DoesNotExist:
+                raise ValidationError("The task is not in the project!")
         return attrs
 
     def to_representation(self, instance):
