@@ -1,7 +1,7 @@
 from django.urls import path
 
 from tasks_api.views import ProjectAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, \
-    CreateSectionAPI, SectionAPI, CreateTaskAPI, CommentAPI, \
+    CreateSectionAPI, SectionAPI, CommentAPI, \
     TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
     ChangeProjectsPositionsAPI, PersonalizeProjectAPI
 
