@@ -3,7 +3,7 @@ from django.urls import path
 from tasks_api.views import ProjectAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, \
     CreateSectionAPI, SectionAPI, CommentAPI, \
     TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
-    ChangeProjectsPositionsAPI, PersonalizeProjectAPI
+    PersonalizeProjectAPI
 
 app_name = 'tasks_api'
 urlpatterns = [
@@ -28,7 +28,5 @@ urlpatterns = [
     path('comment/<int:pk>/', CommentAPI.as_view()),
 
     path('activity/', ActivityAPI.as_view()),
-
-    path('changeposition/', ChangeProjectsPositionsAPI.as_view()),
 
 ]

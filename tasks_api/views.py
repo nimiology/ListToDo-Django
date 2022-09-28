@@ -63,11 +63,10 @@ class JoinToProject(RetrieveAPIView):
         user = request.user
         if project.owner != user:
             try:
-                ProjectUser.objects.get(project=project, owner=user)
-                raise ValidationError("You've already joined this project!")
-            except ProjectUser.DoesNotExist:
                 ProjectUser(owner=user, project=project).save()
                 return self.retrieve(request, *args, **kwargs)
+            except :
+                raise ValidationError("You've already joined this project!")
         else:
             raise ValidationError("You can't join to your own project!")
 
@@ -212,7 +211,7 @@ class TasksAPI(ListCreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
-        section = self.get_object()
+        section = serializer.validated_data.get('section')
         project = section.project
         obj = serializer.save(owner=self.request.user, section=section)
         Activity(assignee=user, project=project, task=obj, status='C',
@@ -293,62 +292,3 @@ class ActivityAPI(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return Activity.objects.filter(project__users__in=user.projects.all())
-
-
-class ChangeProjectsPositionsAPI(GenericAPIView):
-    def post(self, request, *args, **kwargs):
-        request_to_model = request.GET.get('type')
-        if request_to_model == 'project':
-            self.serializer_class = ChangeProjectPositionSerializer
-            self.permission_classes = [IsOwner]
-            objclass = ProjectUser
-        elif request_to_model == 'section':
-            self.serializer_class = ChangeSectionPositionSerializer
-            self.permission_classes = [IsItUsersProjectWithSection]
-            objclass = Section
-        elif request_to_model == 'task':
-            self.serializer_class = ChangeTaskPositionSerializer
-            self.permission_classes = [IsItUsersProjectWithTask]
-            objclass = Task
-        else:
-            raise ValidationError('The type params must be wrong!')
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.validated_data.get('obj')
-        position = serializer.validated_data.get('position')
-        self.check_object_permissions(request=self.request, obj=obj)
-        args = {}
-        if request_to_model == 'task':
-            args['section'] = obj.section
-            serializer = TaskSerializer(obj)
-        elif request_to_model == 'section':
-            args['project'] = obj.project
-            serializer = SectionSerializer(obj)
-        elif request_to_model == 'project':
-            args['owner'] = obj.owner
-            serializer = ProjectUsersSerializer4JoinProject(obj)
-        else:
-            raise ValidationError('The type params must be wrong!')
-        objs = objclass.objects.filter(position__gte=position, **args)
-        qs = objclass.objects.filter(**args)
-
-        if obj.position > position:
-            objs = objs.order_by('-position')
-        elif obj.position < position:
-            objs = objs.order_by('position')
-        else:
-            raise ValidationError('wrong position!')
-        last_position = qs.order_by('-position')[0].position + 2
-        first_position = obj.position
-        obj.position = last_position
-        obj.save()
-        for object in objs:
-            if object != obj:
-                if first_position > position:
-                    object.position += 1
-                elif first_position < position:
-                    object.position -= 1
-                object.save()
-        obj.position = position
-        obj.save()
-        return Response(serializer.data)

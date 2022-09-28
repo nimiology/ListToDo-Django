@@ -64,7 +64,6 @@ class SectionSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     owner = MyUserSerializer(read_only=True, required=False)
-    section = SectionSerializer(read_only=True, required=False)
 
     class Meta:
         model = Task
@@ -99,6 +98,7 @@ class TaskSerializer(serializers.ModelSerializer):
                     raise ValidationError('The label is not found!')
 
     def to_representation(self, instance):
+        self.fields['section'] = SectionSerializer(read_only=True,)
         self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         self.fields['parent_tasks'] = TaskSerializer(many=True)
