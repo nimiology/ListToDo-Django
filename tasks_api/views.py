@@ -1,15 +1,14 @@
 from requests.compat import basestring
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView, UpdateAPIView, ListCreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, \
+     UpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 
 from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
-from tasks_api.permissions import IsInProjectOrCreatOnly, IsItUsersProjectWithProject, \
+from tasks_api.permissions import IsInProject, IsItUsersProjectWithProject, \
     IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask, IsOwnerOrCreatOnly
 from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
-    ChangeProjectPositionSerializer, ChangeTaskPositionSerializer, ChangeSectionPositionSerializer, \
     ProjectUsersPersonalizeSerializer, ActivityLiteSerializer
 
 from tasks_api.utils import slug_generator
@@ -17,7 +16,7 @@ from tasks_api.utils import slug_generator
 
 class ProjectAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    permission_classes = [IsInProjectOrCreatOnly]
+    permission_classes = [IsInProject]
     queryset = Project.objects.all()
 
     def perform_update(self, serializer):
@@ -29,12 +28,17 @@ class ProjectAPI(RetrieveUpdateDestroyAPIView):
 
 
 class MyProjectsAPI(ListCreateAPIView):
-    serializer_class = ProjectUsersSerializer4JoinProject
     filterset_fields = {'project__project': ['exact', 'isnull'],
                         'project__title': ['exact'],
                         'color': ['exact'], 'label': ['exact'],
                         'project__archive': ['exact'], 'project__created': ['exact'],
                         'project__schedule': ['exact'], 'project__inbox': ['exact']}
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProjectSerializer
+        else:
+            return ProjectUsersSerializer4JoinProject
 
     def get_queryset(self):
         user = self.request.user
@@ -56,7 +60,7 @@ class PersonalizeProjectAPI(UpdateAPIView):
 class JoinToProject(RetrieveAPIView):
     serializer_class = ProjectSerializer
     queryset = Project.objects.all()
-    lookup_field = 'inviteSlug'
+    lookup_field = 'invite_slug'
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
@@ -97,7 +101,7 @@ class ChangeInviteSlugProject(RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         obj = self.get_object()
-        obj.inviteSlug = slug_generator()
+        obj.invite_slug = slug_generator()
         obj.save()
         return self.retrieve(request, *args, **kwargs)
 

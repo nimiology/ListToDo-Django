@@ -30,7 +30,7 @@ class Project(models.Model):
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='projects_owner')
     project = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='subprojects')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, blank=True, null=True, related_name=related_name)
-    inviteSlug = models.SlugField(blank=True, null=True)
+    invite_slug = models.SlugField(blank=True, null=True)
     archive = models.BooleanField(default=False)
     inbox = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
@@ -134,7 +134,6 @@ class Task(models.Model):
         return tasks
 
 
-
 class Comment(models.Model):
     related_name = 'comments'
 
@@ -172,19 +171,19 @@ class Activity(models.Model):
 
 def user_post_save(sender, instance, created, *args, **kwargs):
     if created:
-        Project(title='inbox', owner=instance).save()
+        Project.objects.create(title='inbox', owner=instance)
 
 
 def project_post_save(sender, instance, created, *args, **kwargs):
     if created:
-        ProjectUser(owner=instance.owner, project=instance).save()
+        ProjectUser.objects.create(owner=instance.owner, project=instance)
 
         if instance.team:
             if instance.owner != instance.team.owner:
-                ProjectUser(owner=instance.team.owner, project=instance).save()
+                ProjectUser.objects.create(owner=instance.team.owner, project=instance)
             for user in instance.team.users.all():
                 if instance.owner != user:
-                    ProjectUser(owner=user, project=instance).save()
+                    ProjectUser.objects.create(owner=user, project=instance)
 
 
 m2m_changed.connect(label_project_m2m_changed, ProjectUser.label.through)

@@ -13,13 +13,13 @@ class IsOwner(BasePermission):
         return request.user == obj.owner
 
 
-class IsInProjectOrCreatOnly(BasePermission):
+class IsInProject(BasePermission):
     def has_object_permission(self, request, view, obj):
         try:
             obj.users.get(owner=request.user)
             return True
         except ProjectUser.DoesNotExist:
-            return request.method == 'POST'
+            return False
 
 
 class IsItUsersProjectWithProject(BasePermission):
