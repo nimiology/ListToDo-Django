@@ -54,12 +54,13 @@ class ProjectUsersPersonalizeSerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    project = ProjectSerializer(read_only=True, required=False)
-
     class Meta:
         model = Section
         fields = '__all__'
-        extra_kwargs = {'position': {'required': False}}
+
+    def to_representation(self, instance):
+        self.fields['project'] = ProjectSerializer(read_only=True)
+        return super(SectionSerializer, self).to_representation(instance)
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -68,7 +69,6 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
-        extra_kwargs = {'position': {'required': False}}
 
     def _user(self):
         request = self.context.get('request', None)
@@ -96,9 +96,10 @@ class TaskSerializer(serializers.ModelSerializer):
             for l in label:
                 if l.owner != self._user():
                     raise ValidationError('The label is not found!')
+        return attrs
 
     def to_representation(self, instance):
-        self.fields['section'] = SectionSerializer(read_only=True,)
+        self.fields['section'] = SectionSerializer(read_only=True, )
         self.fields['assignee'] = MyUserSerializer(read_only=True)
         self.fields['label'] = LabelSerializer(read_only=True, many=True)
         self.fields['parent_tasks'] = TaskSerializer(many=True)

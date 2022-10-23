@@ -1,7 +1,7 @@
 from django.urls import path
 
 from tasks_api.views import ProjectAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, \
-    CreateSectionAPI, SectionAPI, CommentAPI, \
+    SectionAPI, CommentAPI, \
     TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
     PersonalizeProjectAPI
 
@@ -17,7 +17,6 @@ urlpatterns = [
     path('label/<int:pk>/', LabelAPI.as_view()),
     path('labels/', MyLabelsAPI.as_view()),
 
-    path('project/<int:pk>/section/', CreateSectionAPI.as_view()),
     path('section/<int:pk>/', SectionAPI.as_view()),
     path('sections/', SectionsAPI.as_view()),
 

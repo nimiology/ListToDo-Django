@@ -1,7 +1,7 @@
 import pytz
 from django.db.models import Q
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
-from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, \
+from rest_framework.generics import RetrieveAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, \
     ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -63,7 +63,7 @@ class LeaveTeamAPI(RetrieveAPIView):
             raise ValidationError("You can't leave to your own team!")
 
 
-class AllTeamsAPI(ListCreateAPIView):
+class TeamListCreateAPI(ListCreateAPIView):
     serializer_class = TeamSerializer
 
     def get_queryset(self):

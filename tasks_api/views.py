@@ -65,7 +65,7 @@ class JoinToProject(RetrieveAPIView):
             try:
                 ProjectUser(owner=user, project=project).save()
                 return self.retrieve(request, *args, **kwargs)
-            except :
+            except:
                 raise ValidationError("You've already joined this project!")
         else:
             raise ValidationError("You can't join to your own project!")
@@ -121,20 +121,6 @@ class MyLabelsAPI(ListCreateAPIView):
         return Label.objects.filter(owner=self.request.user)
 
 
-class CreateSectionAPI(CreateAPIView):
-    serializer_class = SectionSerializer
-    queryset = Project.objects.all()
-    permission_classes = [IsItUsersProjectWithProject]
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        project = self.get_object()
-        obj = serializer.save(project=project)
-        Activity(assignee=user, project=project, section=obj, status='C',
-                 description=f'{user} created a section: {obj.title}').save()
-        return obj
-
-
 class SectionAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = SectionSerializer
     queryset = Section.objects.all()
@@ -165,6 +151,13 @@ class SectionsAPI(ListAPIView):
         user = self.request.user
         sections = Section.objects.filter(project__users__in=user.projects.all())
         return sections
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        obj = serializer.save()
+        Activity(assignee=user, project=obj.project, section=obj, status='C',
+                 description=f'{user} created a section: {obj.title}').save()
+        return obj
 
 
 class TaskAPI(RetrieveUpdateDestroyAPIView):
@@ -214,8 +207,8 @@ class TasksAPI(ListCreateAPIView):
         section = serializer.validated_data.get('section')
         project = section.project
         obj = serializer.save(owner=self.request.user, section=section)
-        Activity(assignee=user, project=project, task=obj, status='C',
-                 description=f'{user} created a task: {obj.title}').save()
+        Activity.objects.create(assignee=user, project=project, task=obj, status='C',
+                                description=f'{user} created a task: {obj.title}')
         return obj
 
 
