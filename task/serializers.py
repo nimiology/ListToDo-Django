@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
+from task.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
 from users.serializers import MyUserSerializer
 
 

@@ -7,9 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tasks_api.models import ProjectUser
-from tasks_api.permissions import IsOwnerOrCreatOnly
-from tasks_api.views import ChangeInviteSlugProject
+from task.models import ProjectUser
+from task.permissions import IsOwnerOrCreatOnly
+from task.views import ChangeInviteSlugProject
 from users.models import Team, MyUser
 from users.permissions import IsInTeam, ReadOnly, IsTeamOwner
 from users.serializers import MyUserSerializer, TeamSerializer

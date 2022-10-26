@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('users', '0001_initial'),
-        ('tasks_api', '0001_initial'),
+        ('task', '0001_initial'),
     ]
 
     operations = [
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='task',
             name='label',
-            field=models.ManyToManyField(blank=True, related_name='tasks', to='tasks_api.Label'),
+            field=models.ManyToManyField(blank=True, related_name='tasks', to='task.Label'),
         ),
         migrations.AddField(
             model_name='task',
@@ -34,22 +34,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='task',
             name='section',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='tasks_api.section'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='task.section'),
         ),
         migrations.AddField(
             model_name='task',
             name='task',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subcategories', to='tasks_api.task'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subcategories', to='task.task'),
         ),
         migrations.AddField(
             model_name='section',
             name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sections', to='tasks_api.project'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sections', to='task.project'),
         ),
         migrations.AddField(
             model_name='projectuser',
             name='label',
-            field=models.ManyToManyField(blank=True, related_name='projects', to='tasks_api.Label'),
+            field=models.ManyToManyField(blank=True, related_name='projects', to='task.Label'),
         ),
         migrations.AddField(
             model_name='projectuser',
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectuser',
             name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='users', to='tasks_api.project'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='users', to='task.project'),
         ),
         migrations.AddField(
             model_name='project',
@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='project',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subprojects', to='tasks_api.project'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subprojects', to='task.project'),
         ),
         migrations.AddField(
             model_name='project',
@@ -89,12 +89,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='comment',
             name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks_api.project'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='task.project'),
         ),
         migrations.AddField(
             model_name='comment',
             name='task',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='tasks_api.task'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='comments', to='task.task'),
         ),
         migrations.AddField(
             model_name='activity',
@@ -104,22 +104,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='activity',
             name='comment',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to='tasks_api.comment'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to='task.comment'),
         ),
         migrations.AddField(
             model_name='activity',
             name='project',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity', to='tasks_api.project'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='activity', to='task.project'),
         ),
         migrations.AddField(
             model_name='activity',
             name='section',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to='tasks_api.section'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to='task.section'),
         ),
         migrations.AddField(
             model_name='activity',
             name='task',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to='tasks_api.task'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activity', to='task.task'),
         ),
         migrations.AlterUniqueTogether(
             name='task',

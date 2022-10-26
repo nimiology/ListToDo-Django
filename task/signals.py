@@ -2,7 +2,7 @@ import datetime
 
 from rest_framework.exceptions import ValidationError
 
-from tasks_api.utils import slug_generator
+from task.utils import slug_generator
 
 
 def project_pre_save(sender, instance, *args, **kwargs):

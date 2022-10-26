@@ -2,9 +2,9 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import m2m_changed, pre_save, post_save
 
-from tasks_api.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save, \
+from task.signals import label_project_m2m_changed, project_pre_save, task_pre_save, project_users_pre_save, \
     section_pre_save
-from tasks_api.utils import upload_file
+from task.utils import upload_file
 from users.models import Team, MyUser
 
 COLORS_CHOICES = [[str(i), str(i)] for i in range(1, 9)]

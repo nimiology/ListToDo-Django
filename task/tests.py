@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from tasks_api.models import Project, ProjectUser
+from task.models import Project, ProjectUser, Label
 from users.tests import get_user_token
 
 
@@ -93,21 +93,82 @@ class ProjectAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_personalize_project_put(self):
-        response = self.client.put(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}), data={'color': '1'})
+        response = self.client.put(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}),
+                                   data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_personalize_project_patch(self):
-        response = self.client.patch(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}), data={'color': '1'})
+        response = self.client.patch(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}),
+                                     data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_personalize_project_put_not_owner(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.put(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}), data={'color': '1'})
+        response = self.client.put(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}),
+                                   data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_personalize_project_patch_not_owner(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.patch(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}), data={'color': '1'})
+        response = self.client.patch(reverse('tasks:personalize_project', kwargs={'pk': self.project.pk}),
+                                     data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class LabelAPITestCase(APITestCase):
+    def setUp(self) -> None:
+        self.user, self.token = get_user_token('John')
+        self.client.credentials(HTTP_AUTHORIZATION=self.token)
+        self.label = Label.objects.create(owner=self.user, title='test')
+
+    def test_create_label(self):
+        response = self.client.post(reverse('tasks:label_list'), data={'title': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_labels_list(self):
+        response = self.client.get(reverse('tasks:label_list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_put_label(self):
+        response = self.client.put(reverse('tasks:label', kwargs={'pk': self.label.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'test2')
+
+    def test_patch_label(self):
+        response = self.client.patch(reverse('tasks:label', kwargs={'pk': self.label.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'test2')
+
+    def test_put_label_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.put(reverse('tasks:label', kwargs={'pk': self.label.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_label_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.patch(reverse('tasks:label', kwargs={'pk': self.label.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_label_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.get(reverse('tasks:label', kwargs={'pk': self.label.pk}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_label(self):
+        response = self.client.get(reverse('tasks:label', kwargs={'pk': self.label.pk}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_label_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.delete(reverse('tasks:label', kwargs={'pk': self.label.pk}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_label(self):
+        response = self.client.delete(reverse('tasks:label', kwargs={'pk': self.label.pk}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

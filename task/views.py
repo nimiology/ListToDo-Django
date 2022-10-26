@@ -4,14 +4,14 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdate
      UpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 
-from tasks_api.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
-from tasks_api.permissions import IsInProject, IsItUsersProjectWithProject, \
+from task.models import Project, Label, Section, Task, Comment, Activity, ProjectUser
+from task.permissions import IsInProject, IsItUsersProjectWithProject, \
     IsItUsersProjectWithSection, IsOwner, IsItUsersProjectWithTask, IsOwnerOrCreatOnly
-from tasks_api.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
+from task.serializers import ProjectSerializer, LabelSerializer, SectionSerializer, \
     TaskSerializer, CommentSerializer, ActivitySerializer, ProjectUsersSerializer4JoinProject, \
     ProjectUsersPersonalizeSerializer, ActivityLiteSerializer
 
-from tasks_api.utils import slug_generator
+from task.utils import slug_generator
 
 
 class ProjectAPI(RetrieveUpdateDestroyAPIView):

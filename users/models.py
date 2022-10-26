@@ -5,7 +5,7 @@ from django.db.models.signals import pre_save, post_save
 from django.contrib.auth import get_user_model
 
 from config import settings
-from tasks_api.utils import upload_file
+from task.utils import upload_file
 from users.signals import MyUser_pre_save
 
 

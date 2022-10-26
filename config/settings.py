@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'drf_yasg',
 
     # APPS
-    'tasks_api.apps.TasksConfig',
+    'task.apps.TasksConfig',
     'users.apps.UsersConfig',
 ]
 
