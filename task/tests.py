@@ -355,6 +355,7 @@ class TaskAPITestCase(APITestCase):
         response = self.client.delete(reverse('tasks:task', kwargs={'pk': self.task.pk}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+
 class ActivityAPITestCase(APITestCase):
     def setUp(self):
         self.user, self.token = get_user_token('John')
@@ -363,4 +364,3 @@ class ActivityAPITestCase(APITestCase):
     def test_get_activity_list(self):
         response = self.client.get(reverse('tasks:activity'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
