@@ -111,7 +111,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     owner = MyUserSerializer(read_only=True, required=False)
-    project = ProjectSerializer(read_only=True, required=False)
 
     class Meta:
         model = Comment
@@ -128,16 +127,17 @@ class CommentSerializer(serializers.ModelSerializer):
             limit_mb = 10
             if file_size > limit_mb * 1024 * 1024:
                 raise ValidationError({"file": ["The file must be less than 10MB"]})
-        task = attrs.validated_data.get('task')
+        task = attrs.get('task')
         if task:
             try:
-                task.project.users.get(owner=self._user())
+                task.section.project.users.get(owner=self._user())
             except ProjectUser.DoesNotExist:
                 raise ValidationError("The task is not in the project!")
         return attrs
 
     def to_representation(self, instance):
         self.fields['task'] = TaskSerializer(read_only=True)
+        self.fields['project'] = ProjectSerializer(read_only=True)
         return super(CommentSerializer, self).to_representation(instance)
 
 

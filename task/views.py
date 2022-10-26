@@ -249,7 +249,7 @@ class CommentListCreateAPI(ListCreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
-        project = self.get_object()
+        project = serializer.validated_data.get('project')
         obj = serializer.save(owner=self.request.user, project=project)
         Activity(assignee=user, project=project, comment=obj, status='C',
                  description=f'{user} created a comment: {obj.project.title}').save()

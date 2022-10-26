@@ -23,9 +23,9 @@ urlpatterns = [
     path('tasks/', TaskListCreateAPI.as_view(), name='task_list'),
     path('task/<int:pk>/', TaskAPI.as_view(), name='task'),
 
-    path('comments/', CommentListCreateAPI.as_view()),
-    path('comment/<int:pk>/', CommentAPI.as_view()),
+    path('comments/', CommentListCreateAPI.as_view(), name='comment_list'),
+    path('comment/<int:pk>/', CommentAPI.as_view(), name='comment'),
 
-    path('activity/', ActivityAPI.as_view()),
+    path('activity/', ActivityAPI.as_view(), name='activity'),
 
 ]
