@@ -115,7 +115,7 @@ class LabelAPI(RetrieveUpdateDestroyAPIView):
         return serializer.save(owner=self.get_object().owner)
 
 
-class MyLabelsAPI(ListCreateAPIView):
+class MyLabelListCreateAPI(ListCreateAPIView):
     serializer_class = LabelSerializer
 
     def perform_create(self, serializer):
@@ -147,7 +147,7 @@ class SectionAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
-class SectionsAPI(ListAPIView):
+class SectionListCreateAPI(ListCreateAPIView):
     serializer_class = SectionSerializer
     filterset_fields = ['title', 'project', 'archive', ]
 
@@ -186,7 +186,7 @@ class TaskAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
-class TasksAPI(ListCreateAPIView):
+class TaskListCreateAPI(ListCreateAPIView):
     serializer_class = TaskSerializer
     filterset_fields = {'title': ['exact'],
                         'assignee': ['exact'],
@@ -238,7 +238,7 @@ class CommentAPI(RetrieveUpdateDestroyAPIView):
         return instance.delete()
 
 
-class CommentsAPI(ListCreateAPIView):
+class CommentListCreateAPI(ListCreateAPIView):
     serializer_class = CommentSerializer
     filterset_fields = ['project', 'task', ]
 

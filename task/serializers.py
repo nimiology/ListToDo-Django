@@ -76,26 +76,29 @@ class TaskSerializer(serializers.ModelSerializer):
             return request.user
 
     def validate(self, attrs):
-        assignee = attrs.validated_data.get('assignee')
-        section = attrs.validated_data.get('section')
-        task = attrs.validated_data.get('task')
-        label = attrs.validated_data.get('label')
-        project = attrs.validated_data.get('project')
+        assignee = attrs.get('assignee')
+        section = attrs.get('section')
+        task = attrs.get('task')
+        label = attrs.get('label')
+        if label:
+            for l in label:
+                if l.owner != self._user():
+                    raise ValidationError('The label is not found!')
+        if section:
+            project = section.project
+        elif self.instance:
+            project = self.instance.section.project
+        else:
+            return attrs
         if assignee:
             try:
                 ProjectUser.objects.get(project=project, owner=assignee)
             except ProjectUser.DoesNotExist:
                 raise ValidationError('The assignee is not in the project!')
-        if section:
-            if section.project != project:
-                raise ValidationError('The section is not in the project!')
         if task:
             if task.section.project != project:
                 raise ValidationError('The task is not found!')
-        if label:
-            for l in label:
-                if l.owner != self._user():
-                    raise ValidationError('The label is not found!')
+
         return attrs
 
     def to_representation(self, instance):

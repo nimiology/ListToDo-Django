@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from task.models import Project, ProjectUser, Label
+from task.models import Project, ProjectUser, Label, Section, Task
 from users.tests import get_user_token
 
 
@@ -171,4 +171,125 @@ class LabelAPITestCase(APITestCase):
 
     def test_delete_label(self):
         response = self.client.delete(reverse('tasks:label', kwargs={'pk': self.label.pk}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class SectionAPITestCase(APITestCase):
+    def setUp(self) -> None:
+        self.user, self.token = get_user_token('John')
+        self.client.credentials(HTTP_AUTHORIZATION=self.token)
+        self.project = Project.objects.create(owner=self.user)
+        self.section = Section.objects.create(title='test', project=self.project)
+
+    def test_create_section(self):
+        response = self.client.post(reverse('tasks:section_list'),
+                                    data={'title': 'test', 'project': self.project.pk, 'position': 102})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_sections_list(self):
+        response = self.client.get(reverse('tasks:section_list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_put_section(self):
+        response = self.client.put(reverse('tasks:section', kwargs={'pk': self.section.pk}),
+                                   data={'title': 'test2', 'project': self.project.pk, 'position': 10})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'test2')
+
+    def test_patch_section(self):
+        response = self.client.patch(reverse('tasks:section', kwargs={'pk': self.section.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'test2')
+
+    def test_put_section_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.put(reverse('tasks:section', kwargs={'pk': self.section.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_section_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.patch(reverse('tasks:section', kwargs={'pk': self.section.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_section_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.get(reverse('tasks:section', kwargs={'pk': self.section.pk}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_section(self):
+        response = self.client.get(reverse('tasks:section', kwargs={'pk': self.section.pk}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_section_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.delete(reverse('tasks:section', kwargs={'pk': self.section.pk}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_section(self):
+        response = self.client.delete(reverse('tasks:section', kwargs={'pk': self.section.pk}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class TaskAPITestCase(APITestCase):
+    def setUp(self) -> None:
+        self.user, self.token = get_user_token('John')
+        self.client.credentials(HTTP_AUTHORIZATION=self.token)
+        self.project = Project.objects.create(owner=self.user)
+        self.section = Section.objects.create(title='test', project=self.project)
+        self.task = Task.objects.create(owner=self.user, section=self.section)
+
+    def test_create_task(self):
+        response = self.client.post(reverse('tasks:task_list'),
+                                    data={'title': 'test', 'section': self.section.pk, 'position': 102})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_tasks_list(self):
+        response = self.client.get(reverse('tasks:task_list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_put_task(self):
+        response = self.client.put(reverse('tasks:task', kwargs={'pk': self.task.pk}),
+                                   data={'title': 'test2', 'section': self.section.pk, 'position': 10})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'test2')
+
+    def test_patch_task(self):
+        response = self.client.patch(reverse('tasks:task', kwargs={'pk': self.task.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'test2')
+
+    def test_put_task_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.put(reverse('tasks:task', kwargs={'pk': self.task.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_task_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.patch(reverse('tasks:task', kwargs={'pk': self.task.pk}), data={'title': 'test2'})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_task_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.get(reverse('tasks:task', kwargs={'pk': self.task.pk}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_task(self):
+        response = self.client.get(reverse('tasks:task', kwargs={'pk': self.task.pk}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_task_not_owner(self):
+        user, token = get_user_token('Jane')
+        self.client.credentials(HTTP_AUTHORIZATION=token)
+        response = self.client.delete(reverse('tasks:task', kwargs={'pk': self.task.pk}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_task(self):
+        response = self.client.delete(reverse('tasks:task', kwargs={'pk': self.task.pk}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

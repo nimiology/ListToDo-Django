@@ -1,8 +1,8 @@
 from django.urls import path
 
-from task.views import ProjectAPI, MyProjectsAPI, LabelAPI, MyLabelsAPI, LeaveProject, \
+from task.views import ProjectAPI, MyProjectsAPI, LabelAPI, MyLabelListCreateAPI, LeaveProject, \
     SectionAPI, CommentAPI, \
-    TaskAPI, TasksAPI, SectionsAPI, CommentsAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
+    TaskAPI, TaskListCreateAPI, SectionListCreateAPI, CommentListCreateAPI, ChangeInviteSlugProject, ActivityAPI, JoinToProject, \
     PersonalizeProjectAPI
 
 app_name = 'tasks'
@@ -15,15 +15,15 @@ urlpatterns = [
     path('project/<int:pk>/personalize/', PersonalizeProjectAPI.as_view(), name='personalize_project'),
 
     path('label/<int:pk>/', LabelAPI.as_view(), name='label'),
-    path('labels/', MyLabelsAPI.as_view(), name='label_list'),
+    path('labels/', MyLabelListCreateAPI.as_view(), name='label_list'),
 
-    path('section/<int:pk>/', SectionAPI.as_view()),
-    path('sections/', SectionsAPI.as_view()),
+    path('section/<int:pk>/', SectionAPI.as_view(), name='section'),
+    path('sections/', SectionListCreateAPI.as_view(), name='section_list'),
 
-    path('tasks/', TasksAPI.as_view()),
-    path('task/<int:pk>/', TaskAPI.as_view()),
+    path('tasks/', TaskListCreateAPI.as_view(), name='task_list'),
+    path('task/<int:pk>/', TaskAPI.as_view(), name='task'),
 
-    path('comments/', CommentsAPI.as_view()),
+    path('comments/', CommentListCreateAPI.as_view()),
     path('comment/<int:pk>/', CommentAPI.as_view()),
 
     path('activity/', ActivityAPI.as_view()),
