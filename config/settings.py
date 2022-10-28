@@ -42,9 +42,15 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
 
-    # APPS
-    'task.apps.TasksConfig',
-    'users.apps.UsersConfig',
+    # apps
+
+    'label',
+    'project',
+    'section',
+    'task',
+    'activity',
+    'comment',
+    'users',
 ]
 
 

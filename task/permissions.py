@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from task.models import ProjectUser
+from project.models import ProjectUser
 
 
 class IsOwnerOrCreatOnly(BasePermission):

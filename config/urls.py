@@ -34,10 +34,22 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
 )
 urlpatterns = [
+    #admin
     path('admin/', admin.site.urls),
-    path('', include('task.urls')),
-    path('', include('users.urls')),
+    #djoser
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
+    # docs
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+
+    # apps
+    path('label/', include('label.urls')),
+    path('project/', include('project.urls')),
+    path('section/', include('section.urls')),
+    path('task/', include('task.urls')),
+    path('activity/', include('activity.urls')),
+    path('comment/', include('comment.urls')),
+    path('', include('users.urls')),
 
 ]
 urlpatterns = urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
