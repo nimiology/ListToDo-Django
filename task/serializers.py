@@ -11,6 +11,7 @@ from users.serializers import MyUserSerializer
 
 class TaskSerializer(ModelSerializer):
     owner = MyUserSerializer(read_only=True, required=False)
+    position = serializers.IntegerField(required=False, default=None)
 
     class Meta:
         model = Task

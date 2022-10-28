@@ -18,7 +18,7 @@ class TaskAPITestCase(APITestCase):
 
     def test_create_task(self):
         response = self.client.post(reverse('task:task_list'),
-                                    data={'title': 'test', 'section': self.section.pk, 'position': 102})
+                                    data={'title': 'test', 'section': self.section.pk})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_get_tasks_list(self):
@@ -27,9 +27,10 @@ class TaskAPITestCase(APITestCase):
 
     def test_put_task(self):
         response = self.client.put(reverse('task:task', kwargs={'pk': self.task.pk}),
-                                   data={'title': 'test2', 'section': self.section.pk, 'position': 10})
+                                   data={'title': 'test2', 'section': self.section.pk, 'position':70})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'test2')
+        self.assertEqual(response.data['position'], 70)
 
     def test_patch_task(self):
         response = self.client.patch(reverse('task:task', kwargs={'pk': self.task.pk}), data={'title': 'test2'})

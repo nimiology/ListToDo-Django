@@ -7,6 +7,8 @@ from section.models import Section
 
 
 class SectionSerializer(ModelSerializer):
+    position = IntegerField(required=False, default=None)
+
     class Meta:
         model = Section
         fields = '__all__'

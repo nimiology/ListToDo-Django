@@ -16,7 +16,7 @@ class SectionAPITestCase(APITestCase):
 
     def test_create_section(self):
         response = self.client.post(reverse('section:section_list'),
-                                    data={'title': 'test', 'project': self.project.pk, 'position': 102})
+                                    data={'title': 'test', 'project': self.project.pk})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_get_sections_list(self):

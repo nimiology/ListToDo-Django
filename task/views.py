@@ -56,3 +56,5 @@ class TaskListCreateAPI(ListCreateAPIView):
         Activity.objects.create(assignee=user, project=project, task=obj, status='C',
                                 description=f'{user} created a task: {obj.title}')
         return obj
+
+

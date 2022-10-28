@@ -52,7 +52,6 @@ class ProjectUsersSerializer4JoinProject(serializers.ModelSerializer):
     class Meta:
         model = ProjectUser
         fields = '__all__'
-        extra_kwargs = {'position': {'required': False}}
 
 
 class ChangeProjectPositionSerializer(serializers.Serializer):
