@@ -4,9 +4,9 @@ from rest_framework.response import Response
 
 from activity.models import Activity
 from project.models import ProjectUser
-from project.serializers import ChangeProjectPositionSerializer
+from project.serializers import ChangeProjectPositionSerializer, ProjectUsersSerializer4JoinProject
 from section.models import Section
-from section.serializers import ChangeSectionPositionSerializer
+from section.serializers import ChangeSectionPositionSerializer, SectionSerializer
 from task.models import Task
 from task.permissions import IsItUsersProjectWithTask, IsItUsersProjectWithSection, IsOwner
 from task.serializers import TaskSerializer, ChangeTaskPositionSerializer
@@ -64,11 +64,10 @@ class TaskListCreateAPI(ListCreateAPIView):
         return obj
 
 
-
-
 class ChangeProjectsPositionsAPI(GenericAPIView):
     instance_class = None
     request_type = None
+
     def get_serializer_class(self):
         self.request_type = self.request.GET.get('type')
         if self.request_type == 'project':
@@ -86,6 +85,7 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         else:
             raise ValidationError('The type params must be wrong!')
         return self.serializer_class
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

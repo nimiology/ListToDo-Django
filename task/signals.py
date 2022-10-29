@@ -16,8 +16,6 @@ def task_pre_save(sender, instance, *args, **kwargs):
         every = instance.every
         if every:
             today = datetime.date.today()
-            instance.schedule.strftime("%d-%b-%Y (%H:%M:%S.%f)")
-
             if every == '0':
                 day = datetime.datetime.now() + datetime.timedelta(days=1)
             elif every == '1':
@@ -38,15 +36,18 @@ def task_pre_save(sender, instance, *args, **kwargs):
                 raise ValidationError('WTF!')
             if day.day == today.day:
                 day = today + datetime.timedelta(days=7)
+            if instance.schedule is None:
+                instance.schedule = datetime.datetime.now()
             schedulestr = f"{day.strftime('%d-%b-%Y')} ({instance.schedule.strftime('%H:%M:%S.%f')})"
             schedule = datetime.datetime.strptime(schedulestr, '%d-%b-%Y (%H:%M:%S.%f)')
-            sender(owner=instance.owner, project=instance.project,
-                   assignee=instance.assignee, section=instance.section,
-                   task=instance.task, title=instance.title,
-                   description=instance.description, color=instance.color,
-                   label=instance.label, priority=instance.priority,
-                   position=instance.position, created=instance.created,
-                   schedule=schedule,
-                   every=instance.every).save()
+            new_task = sender.objects.create(
+                owner=instance.owner, every=instance.every,
+                assignee=instance.assignee, section=instance.section,
+                task=instance.task, title=instance.title,
+                description=instance.description, color=instance.color,
+                priority=instance.priority, schedule=schedule,
+                created=instance.created
+            )
+            new_task.label.set(instance.label.all())
     else:
         instance.completedDate = None
