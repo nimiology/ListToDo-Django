@@ -64,7 +64,7 @@ class ProjectUser(models.Model):
         return f'{self.owner} - {self.project}'
 
     class Meta:
-        unique_together = [['owner', 'project'], ['owner', 'position']]
+        unique_together = ['owner', 'project']
 
 
 def project_post_save(sender, instance, created, *args, **kwargs):

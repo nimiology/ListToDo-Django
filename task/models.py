@@ -46,7 +46,6 @@ class Task(models.Model):
         return f'{self.owner.username} - {self.title}'
 
     class Meta:
-        unique_together = ['section', 'position']
         ordering = ['position']
 
     def parent_tasks(self):

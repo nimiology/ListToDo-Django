@@ -7,8 +7,7 @@ def task_pre_save(sender, instance, *args, **kwargs):
     if instance.position is None:
         tasks = sender.objects.filter(section=instance.section).order_by('-position')
         if tasks.exists():
-            last_task = tasks[0]
-            instance.position = last_task.position + 1
+            instance.position = tasks[0].position + 1
         else:
             instance.position = 0
     if instance.completed:

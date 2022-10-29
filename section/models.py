@@ -15,7 +15,6 @@ class Section(models.Model):
         return f'{self.project} - {self.title}'
 
     class Meta:
-        unique_together = ['project', 'position']
         ordering = ['position']
 
 

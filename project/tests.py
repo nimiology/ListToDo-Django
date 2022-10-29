@@ -52,14 +52,16 @@ class ProjectAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch_project(self):
-        response = self.client.patch(reverse('project:project', kwargs={'pk': self.project.pk}), data={'title': 'test2'})
+        response = self.client.patch(reverse('project:project', kwargs={'pk': self.project.pk}),
+                                     data={'title': 'test2'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'test2')
 
     def test_patch_project_not_in_project(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.patch(reverse('project:project', kwargs={'pk': self.project.pk}), data={'title': 'test2'})
+        response = self.client.patch(reverse('project:project', kwargs={'pk': self.project.pk}),
+                                     data={'title': 'test2'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_change_project_invite_slug(self):
@@ -75,7 +77,8 @@ class ProjectAPITestCase(APITestCase):
     def test_join_to_project(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.get(reverse('project:join_to_project', kwargs={'invite_slug': self.project.invite_slug}), )
+        response = self.client.get(
+            reverse('project:join_to_project', kwargs={'invite_slug': self.project.invite_slug}), )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_leave_project(self):
@@ -93,26 +96,43 @@ class ProjectAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_personalize_project_put(self):
-        response = self.client.put(reverse('project:personalize_project', kwargs={'pk': self.project.pk}),
-                                   data={'color': '1'})
+        response = self.client.put(
+            reverse('project:personalize_project', kwargs={'pk': self.project.users.get(owner=self.user).pk}),
+            data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_personalize_project_patch(self):
-        response = self.client.patch(reverse('project:personalize_project', kwargs={'pk': self.project.pk}),
-                                     data={'color': '1'})
+        response = self.client.patch(
+            reverse('project:personalize_project', kwargs={'pk': self.project.users.get(owner=self.user).pk}),
+            data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_personalize_project_put_not_owner(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.put(reverse('project:personalize_project', kwargs={'pk': self.project.pk}),
-                                   data={'color': '1'})
+        response = self.client.put(
+            reverse('project:personalize_project', kwargs={'pk': self.project.users.get(owner=self.user).pk}),
+            data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_personalize_project_patch_not_owner(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.patch(reverse('project:personalize_project', kwargs={'pk': self.project.pk}),
-                                     data={'color': '1'})
+        response = self.client.patch(
+            reverse('project:personalize_project', kwargs={'pk': self.project.users.get(owner=self.user).pk}),
+            data={'color': '1'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_change_position(self):
+        for i in range(100):
+            Project.objects.create(owner=self.user, title="project")
+        request = self.client.patch(
+            reverse('project:personalize_project', kwargs={'pk': self.project.users.get(owner=self.user).pk}),
+            data={'position': 51})
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(request.data['position'], 51)
+        request = self.client.patch(
+            reverse('project:personalize_project', kwargs={'pk': self.project.users.get(owner=self.user).pk}),
+            data={'position': 10})
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(request.data['position'], 10)

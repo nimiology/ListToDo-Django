@@ -30,7 +30,8 @@ class SectionAPITestCase(APITestCase):
         self.assertEqual(response.data['title'], 'test2')
 
     def test_patch_section(self):
-        response = self.client.patch(reverse('section:section', kwargs={'pk': self.section.pk}), data={'title': 'test2'})
+        response = self.client.patch(reverse('section:section', kwargs={'pk': self.section.pk}),
+                                     data={'title': 'test2'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'test2')
 
@@ -43,7 +44,8 @@ class SectionAPITestCase(APITestCase):
     def test_patch_section_not_owner(self):
         user, token = get_user_token('Jane')
         self.client.credentials(HTTP_AUTHORIZATION=token)
-        response = self.client.patch(reverse('section:section', kwargs={'pk': self.section.pk}), data={'title': 'test2'})
+        response = self.client.patch(reverse('section:section', kwargs={'pk': self.section.pk}),
+                                     data={'title': 'test2'})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_section_not_owner(self):
@@ -66,4 +68,12 @@ class SectionAPITestCase(APITestCase):
         response = self.client.delete(reverse('section:section', kwargs={'pk': self.section.pk}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-
+    def test_change_position(self):
+        for i in range(100):
+            Section.objects.create(project=self.project)
+        request = self.client.patch(reverse('section:section', kwargs={'pk': self.section.pk}), data={'position': 51})
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(request.data['position'], 51)
+        request = self.client.patch(reverse('section:section', kwargs={'pk': self.section.pk}), data={'position': 10})
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(request.data['position'], 10)

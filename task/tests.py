@@ -27,7 +27,7 @@ class TaskAPITestCase(APITestCase):
 
     def test_put_task(self):
         response = self.client.put(reverse('task:task', kwargs={'pk': self.task.pk}),
-                                   data={'title': 'test2', 'section': self.section.pk, 'position':70})
+                                   data={'title': 'test2', 'section': self.section.pk, 'position': 70})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'test2')
         self.assertEqual(response.data['position'], 70)
@@ -68,3 +68,14 @@ class TaskAPITestCase(APITestCase):
     def test_delete_task(self):
         response = self.client.delete(reverse('task:task', kwargs={'pk': self.task.pk}))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_change_position(self):
+        for i in range(100):
+            Task.objects.create(owner=self.user, section=self.section)
+        request = self.client.patch(reverse('task:task', kwargs={'pk': self.task.pk}), data={'position': 51})
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(request.data['position'], 51)
+        request = self.client.patch(reverse('task:task', kwargs={'pk': self.task.pk}), data={'position': 10})
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(request.data['position'], 10)
+

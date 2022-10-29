@@ -3,13 +3,11 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIV
 from rest_framework.response import Response
 
 from activity.models import Activity
-from project.models import ProjectUser
-from project.serializers import ChangeProjectPositionSerializer, ProjectUsersSerializer4JoinProject
-from section.models import Section
-from section.serializers import ChangeSectionPositionSerializer, SectionSerializer
+from project.serializers import ProjectUsersSerializer4JoinProject
+from section.serializers import SectionSerializer
 from task.models import Task
-from task.permissions import IsItUsersProjectWithTask, IsItUsersProjectWithSection, IsOwner
-from task.serializers import TaskSerializer, ChangeTaskPositionSerializer
+from task.permissions import IsItUsersProjectWithTask
+from task.serializers import TaskSerializer
 
 
 class TaskAPI(RetrieveUpdateDestroyAPIView):
@@ -65,27 +63,6 @@ class TaskListCreateAPI(ListCreateAPIView):
 
 
 class ChangeProjectsPositionsAPI(GenericAPIView):
-    instance_class = None
-    request_type = None
-
-    def get_serializer_class(self):
-        self.request_type = self.request.GET.get('type')
-        if self.request_type == 'project':
-            self.serializer_class = ChangeProjectPositionSerializer
-            self.permission_classes = [IsOwner]
-            self.instance_class = ProjectUser
-        elif self.request_type == 'section':
-            self.serializer_class = ChangeSectionPositionSerializer
-            self.permission_classes = [IsItUsersProjectWithSection]
-            self.instance_class = Section
-        elif self.request_type == 'task':
-            self.serializer_class = ChangeTaskPositionSerializer
-            self.permission_classes = [IsItUsersProjectWithTask]
-            self.instance_class = Task
-        else:
-            raise ValidationError('The type params must be wrong!')
-        return self.serializer_class
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -94,6 +71,7 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
         position = serializer.validated_data.get('position')
         # check_object_permissions
         self.check_object_permissions(request=self.request, obj=obj)
+        # get objects
         args = {}
         if self.request_type == 'task':
             args['section'] = obj.section
@@ -106,26 +84,6 @@ class ChangeProjectsPositionsAPI(GenericAPIView):
             serializer = ProjectUsersSerializer4JoinProject(obj)
         else:
             raise ValidationError('The type params must be wrong!')
-        instances = self.instance_class.objects.filter(position__gte=position, **args)
-        qs = self.instance_class.objects.filter(**args)
 
-        if obj.position > position:
-            instances = instances.order_by('-position')
-        elif obj.position < position:
-            instances = instances.order_by('position')
-        else:
-            raise ValidationError('wrong position!')
-        last_position = qs.order_by('-position')[0].position + 2
         first_position = obj.position
-        obj.position = last_position
-        obj.save()
-        for object in instances:
-            if object != obj:
-                if first_position > position:
-                    object.position += 1
-                elif first_position < position:
-                    object.position -= 1
-                object.save()
-        obj.position = position
-        obj.save()
         return Response(serializer.data)
